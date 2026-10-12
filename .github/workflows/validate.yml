@@ -97,7 +97,7 @@ jobs:
           docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres --format=custom --no-owner --no-acl --schema=public --schema=app_private > /tmp/studiosaas-restore-drill.dump
           test -s /tmp/studiosaas-restore-drill.dump
           psql "$DB_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE restore_drill"
-          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -c "CREATE SCHEMA auth; CREATE TABLE auth.users (id uuid PRIMARY KEY); CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS \\$\\$ SELECT NULL::uuid \\$\\$;"
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -c "CREATE SCHEMA auth; CREATE TABLE auth.users (id uuid PRIMARY KEY); CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS 'SELECT NULL::uuid';"
           docker exec -i "$DB_CONTAINER" pg_restore -U postgres -d restore_drill --no-owner --no-acl --exit-on-error < /tmp/studiosaas-restore-drill.dump
           docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.members WHERE email LIKE 'perf-%@example.invalid'" | grep -qx '50000'
           docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.centers WHERE organization_id = '20000000-0000-0000-0000-000000000099'::uuid" | grep -qx '10'
