@@ -53,7 +53,7 @@ test('registration requires matching passwords and never exposes role selection'
   await page.getByLabel('Şifre', { exact: true }).fill('strong-password-123');
   await page.getByLabel('Şifreyi tekrar girin').fill('different-password');
   await page.getByRole('button', { name: /Hesap oluştur/ }).click();
-  await expect(page.getByRole('alert')).toContainText('Şifreler eşleşmiyor');
+  await expect(page.locator('p.notice.error[role="alert"]')).toContainText('Şifreler eşleşmiyor');
 });
 
 test('login offers registration link', async ({ page }) => {
