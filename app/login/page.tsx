@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "profile") {
+    if (params.get("confirmed") === "true") {\n      setMessage("E-posta adresiniz doğrulandı. Giriş yapabilirsiniz.");\n    } else if (params.get("error") === "confirmation") {\n      setError("Doğrulama bağlantısı geçersiz veya süresi dolmuş. Gerekirse yeniden kayıt olmayı deneyin.");\n    } else if (params.get("error") === "profile") {
       setError("Bu hesap için profil/rol kaydı doğrulanamadı. Lütfen stüdyo yöneticisine başvurun.");
     }
   }, []);
@@ -59,7 +59,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="login-form"><label htmlFor="email">E-posta</label><input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="ornek@stüdyo.com" /><label htmlFor="password">Şifre</label><input id="password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Şifreniz" minLength={6} />
       {error && <p className="notice error" role="alert">{error}</p>}{message && <p className="notice success" role="status">{message}</p>}
       <button type="submit" disabled={busy}>{busy ? "Giriş yapılıyor…" : "Giriş yap"} <span aria-hidden="true">→</span></button></form>
-      <button className="text-button" type="button" onClick={handleReset}>Şifremi unuttum</button><div className="secure-note"><span aria-hidden="true">◈</span> Güvenli oturum · Supabase Auth</div><p className="setup-note">Henüz hesabınız yoksa yöneticinizden erişim isteyin.</p><Link href="/" className="back-link">← Ana sayfa</Link>
+      <button className="text-button" type="button" onClick={handleReset}>Şifremi unuttum</button><div className="secure-note"><span aria-hidden="true">◈</span> Güvenli oturum · Supabase Auth</div><p className="setup-note">Henüz hesabınız yok mu? <Link href="/register">Hesap oluştur</Link>.</p><Link href="/" className="back-link">← Ana sayfa</Link>
     </div><p className="copyright">© {new Date().getFullYear()} FTK Studio</p></section>
   </main>;
 }
