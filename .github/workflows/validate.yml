@@ -2,7 +2,7 @@ name: Validate
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/**']
   pull_request:
     branches: [main, claude/architecture-improvements, feat/session-room-booking-approval]
 
