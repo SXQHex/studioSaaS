@@ -42,7 +42,13 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Start isolated Supabase database
-        run: supabase start
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The historical migrations were consolidated into a schema-only baseline.
+          # Hold the new forward migration until the baseline has been loaded.
+          mv supabase/migrations/20261012180000_harden_internal_function_privileges.sql /tmp/harden_internal_function_privileges.sql
+          supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
         run: |
@@ -52,7 +58,7 @@ jobs:
           source /tmp/supabase.env
           set +a
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/schema/00_baseline_snapshot.sql
-          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180000_harden_internal_function_privileges.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/harden_internal_function_privileges.sql
           cat > /tmp/verify-privileges.sql <<'SQL'
           DO $$
           BEGIN
@@ -69,6 +75,29 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/verify-privileges.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security_privileges.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/center_isolation.test.sql
+      - name: Measure representative query plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          source /tmp/supabase.env
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/performance_explain.sql | tee /tmp/performance-explain.txt
+          grep -q "Execution Time" /tmp/performance-explain.txt
+      - name: Exercise logical backup and restore in isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          source /tmp/supabase.env
+          pg_dump "$DB_URL" --format=custom --no-owner --no-acl --file=/tmp/studiosaas-restore-drill.dump
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE restore_drill"
+          RESTORE_URL="${DB_URL%/postgres}/restore_drill"
+          pg_restore --dbname="$RESTORE_URL" --no-owner --no-acl --exit-on-error /tmp/studiosaas-restore-drill.dump
+          psql "$RESTORE_URL" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.members WHERE email LIKE 'perf-%@example.invalid'" | grep -qx '50000'
+          psql "$RESTORE_URL" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.centers WHERE organization_id = '20000000-0000-0000-0000-000000000099'::uuid" | grep -qx '10'
+          echo "Logical backup/restore passed: 50,000 synthetic members and 10 centers restored."
+      - name: Browser UX and accessibility tests
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
       - name: Smoke test production server
         run: |
           set -euo pipefail

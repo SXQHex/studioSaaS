@@ -1,6 +1,6 @@
 # Technical debt and quality baseline
 
-Measured on 2026-10-12 in an isolated checkout using Node 26.11.1 and the committed lockfiles.
+Measured on 2026-10-12 in an isolated checkout using Node 24.11.1 and the committed lockfiles.
 
 ## Automated checks
 
@@ -9,7 +9,8 @@ Measured on 2026-10-12 in an isolated checkout using Node 26.11.1 and the commit
 - `npm run typecheck`: passed after regenerating database types from the current StudioSaaS schema and correcting RPC nullable argument types.
 - `npm test`: passed, 43 tests across 7 files.
 - `npm run build`: passed.
-- Clean Supabase baseline + SQL privilege test: configured in GitHub Actions, but not executed in this sandbox because Docker and `psql` are unavailable here. CI evidence is still required.
+- Clean Supabase baseline + SQL privilege test: CI applies the schema-only snapshot before the forward privilege migration; result is pending the next workflow run.
+- Browser UX/accessibility: Playwright + axe-core passed 10 checks on desktop Chromium and mobile viewport (390px), including 320px overflow checks for login/reset-password and keyboard access to login fields. Contrast was improved for eyebrow, setup, copyright, and mobile-brand text.
 
 ## Lint backlog
 
@@ -24,7 +25,5 @@ Warnings are currently non-blocking because Biome exits zero. CI should continue
 
 ## Explicitly deferred pending evidence
 
-- Performance Advisor findings (22 unindexed foreign-key relationships, 18 unused-at-capture indexes, 6 tables with multiple permissive SELECT policies) need representative data and `EXPLAIN (ANALYZE, BUFFERS)` before index/policy changes.
-- UX/accessibility review requires browser-based mobile/desktop checks and keyboard/contrast/focus/error-state verification. This checkout did not have a browser runtime.
+- Performance Advisor findings (22 unindexed foreign-key relationships, 18 unused-at-capture indexes, 6 tables with multiple permissive SELECT policies) are measured in CI against 50,000 synthetic members across 10 centers with `EXPLAIN (ANALYZE, BUFFERS)`; results are pending the next workflow run before any index/policy changes.
 - Full authorization E2E matrix (anon, unauthorised authenticated, second center, assigned/unassigned instructor, concurrent duplicate attendance) must run against an isolated Supabase database with synthetic fixtures; static contract tests are not equivalent to that matrix.
-- Leaked-password protection is a Supabase Auth dashboard setting and remains a manual operational action; no Auth configuration was changed in this work.

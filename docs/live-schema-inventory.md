@@ -47,7 +47,6 @@ Application-relevant extension observed: `btree_gist` 1.7 in `public`, required 
 Security Advisor:
 
 - Five authenticated-callable public SECURITY DEFINER RPCs; the body of each must be reviewed for role and center checks.
-- Leaked-password protection disabled.
 - `btree_gist` installed in the exposed `public` schema (warning).
 
 Performance Advisor:

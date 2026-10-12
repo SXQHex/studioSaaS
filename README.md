@@ -5,11 +5,11 @@ Next.js frontend for the dance-school management app. Supabase is the authentica
 ## Runtime
 
 - Next.js: `16.4.0`
-- Node.js: `26.x` (pinned via `.nvmrc` and enforced by `package.json`)
+- Node.js: `24.x` (pinned via `.nvmrc` and enforced by `package.json`)
 
 ## Local development
 
-1. Install Node.js 26.x and pnpm (or npm).
+1. Install Node.js 24.x and pnpm (or npm).
 2. Copy `.env.example` to `.env.local` and set the Supabase project URL and **publishable** key.
 3. Install dependencies with `pnpm install` (or `npm install`).
 4. Run `pnpm dev` (or `npm run dev`).
@@ -65,6 +65,6 @@ See [docs/initial-admin-setup.md](docs/initial-admin-setup.md) to securely promo
 
 ## Deployment
 
-Import this repository as a **new Netlify site** and configure the environment variables listed in `.env.example`. Do not attach this repository to the existing `fethiyetango.netlify.app` marketing site. Node.js 26 is enforced by `.nvmrc` and `package.json`. Let Netlify use its Next.js runtime/adapter; do not configure a static-only export.
+Import this repository as a **new Netlify site** and configure the environment variables listed in `.env.example`. Do not attach this repository to the existing `fethiyetango.netlify.app` marketing site. Node.js 24 is enforced by `.nvmrc` and `package.json`. Let Netlify use its Next.js runtime/adapter; do not configure a static-only export.
 
 For the custom domain and Auth callback allowlist, follow [docs/production-deployment.md](docs/production-deployment.md). Backup/restore operations are documented in [docs/backup-and-restore.md](docs/backup-and-restore.md).

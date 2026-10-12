@@ -1,6 +1,6 @@
 # Backup and restore runbook
 
-**Status: procedure drafted; restore drill not yet evidenced.** Do not mark T05 complete until the owner confirms the targets and a restore test passes.
+**Status: isolated logical-dump restore drill is automated in CI; managed Supabase backup/PITR restoration is not evidenced by this drill.** Do not mark the managed-backup portion of T05 complete until the owner confirms the available recovery point and a separate backup restore passes.
 
 ## Recovery targets (proposed; owner confirmation required)
 
@@ -23,6 +23,8 @@ Official guidance: https://supabase.com/docs/guides/platform/backups
 Database backups do **not** include file objects uploaded through the Supabase Storage API. Back up required Storage objects separately using the dashboard or Storage/S3-compatible API, preserving object paths and metadata. Also document Auth URL configuration, email templates, rate limits, Edge Function source/configuration, secrets (in a secret manager only), and any external integrations; these are not all restored by a database dump.
 
 ## Isolated restore drill
+
+The CI drill creates a custom-format `pg_dump` from an isolated Supabase database containing synthetic records, restores it into a second database, and verifies that all 50,000 synthetic members and 10 centers survived. This validates the logical dump/restore path only; it does not prove that a managed production backup, Storage objects, Auth settings, or Edge Functions can be restored. Record the workflow run URL and timings here after the run succeeds.
 
 1. Create/use a separate test project or isolated database; never restore over production for a drill.
 2. Restore the selected managed backup or logical export. If using a project clone, separately configure Auth, Storage, extensions, and Edge Functions as required.

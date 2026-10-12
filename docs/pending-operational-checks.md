@@ -7,7 +7,7 @@ This document records checks that still require dashboard access, isolated test 
 - Supabase project `StudioSaaS` (`ysplylnwdfwizmuxvcqg`) is `ACTIVE_HEALTHY` on PostgreSQL 17.11.
 - Supabase reports 12 applied migration versions. The baseline snapshot was consolidated to represent the current schema; the live migration history was not modified.
 - Center-level tenancy, room/session requests, complete center isolation, and notification migrations are present in the live migration history. Verify functional behavior in an isolated environment before relying on it operationally.
-- Security Advisor findings are tracked in the hardening work: internal `app_private` SECURITY DEFINER execution privileges need tightening; five public SECURITY DEFINER RPCs are intentionally callable by authenticated users and perform role/center checks in their bodies; leaked-password protection is disabled.
+- Security Advisor findings are tracked in the hardening work: internal `app_private` SECURITY DEFINER execution privileges need tightening; five public SECURITY DEFINER RPCs are intentionally callable by authenticated users and perform role/center checks in their bodies.
 - Performance Advisor reports 22 foreign-key relationships without covering indexes, 18 indexes with no observed usage, and six tables with multiple permissive SELECT policies. These are review items, not automatic index/policy deletion instructions.
 
 ## Auth configuration
@@ -19,12 +19,12 @@ In Supabase Dashboard → Authentication → URL Configuration, verify:
 - Add `http://localhost:3000/reset-password` only for local development.
 - Avoid broad wildcard production redirect URLs.
 
-In Authentication → Password/Security settings, enable leaked-password protection and verify email confirmation/rate-limit settings against the account-provisioning policy. These dashboard settings have not been changed by the repository work.
+Verify email confirmation and rate-limit settings against the account-provisioning policy; no Auth dashboard settings were changed by this repository work.
 
 ## Deployment verification
 
 - Netlify site: `ftksaasweb`; production URL: `https://ftksaasweb.netlify.app`; custom domain: `https://uye.fethiyetango.com`.
-- Confirm the Netlify site is connected to `SXQHex/studioSaaS`, deploys from `main`, and uses Node 26. Confirm both `/api/health` endpoints return the expected service status.
+- Confirm the Netlify site is connected to `SXQHex/studioSaaS`, deploys from `main`, and uses Node 24. Confirm both `/api/health` endpoints return the expected service status.
 - Verify production environment variables in Netlify without copying their values into GitHub or test output. The browser-facing app requires only the Supabase URL and publishable key.
 
 ## Center-isolation acceptance tests

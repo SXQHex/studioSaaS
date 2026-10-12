@@ -39,7 +39,6 @@ In the **StudioSaaS** project, open Authentication > URL Configuration:
 - Add `http://localhost:3000/reset-password` only if local development is required.
 - Add specific preview callback URLs temporarily for testing; do not add broad wildcard production entries.
 
-The Security Advisor currently reports leaked-password protection disabled. Enable it under Authentication > Password/Security settings before inviting operational users: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection. Confirm email verification and rate limits match the intended account-provisioning policy.
 
 ## 4. Activate the owner account
 
