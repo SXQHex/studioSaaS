@@ -15,7 +15,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("confirmed") === "true") {\n      setMessage("E-posta adresiniz doğrulandı. Giriş yapabilirsiniz.");\n    } else if (params.get("error") === "confirmation") {\n      setError("Doğrulama bağlantısı geçersiz veya süresi dolmuş. Gerekirse yeniden kayıt olmayı deneyin.");\n    } else if (params.get("error") === "profile") {
+    if (params.get("confirmed") === "true") {
+      setMessage("E-posta adresiniz doğrulandı. Giriş yapabilirsiniz.");
+    } else if (params.get("error") === "confirmation") {
+      setError("Doğrulama bağlantısı geçersiz veya süresi dolmuş. Gerekirse yeniden kayıt olmayı deneyin.");
+    } else if (params.get("error") === "profile") {
       setError("Bu hesap için profil/rol kaydı doğrulanamadı. Lütfen stüdyo yöneticisine başvurun.");
     }
   }, []);
