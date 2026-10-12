@@ -12,7 +12,7 @@ export async function recordAttendance(input: unknown): Promise<ActionResult> {
 
   const { data: lesson, error: lessonError } = await supabase
     .from("lessons")
-    .select("type, status, private_member_id")
+    .select("type, status, private_member_id, center_id")
     .eq("id", data.lesson_id)
     .maybeSingle();
   if (lessonError || !lesson) return fail("Ders bulunamadı.");
@@ -20,6 +20,14 @@ export async function recordAttendance(input: unknown): Promise<ActionResult> {
   if (lesson.status === "cancelled" || lesson.status === "postponed") {
     return fail("İptal veya ertelenmiş bir ders için yoklama kaydı eklenemez.");
   }
+  const { data: member, error: memberError } = await supabase
+    .from("members")
+    .select("center_id")
+    .eq("id", data.member_id)
+    .maybeSingle();
+  if (memberError || !member) return fail("Üye bulunamadı.");
+  if (member.center_id !== lesson.center_id) return fail("Yoklama için ders ve üye aynı merkeze ait olmalıdır.");
+
   if (lesson.type === "private") {
     if (!lesson.private_member_id) {
       return fail("Özel derse henüz üye atanmamış. Önce ders kaydını düzenleyin.");
@@ -30,6 +38,7 @@ export async function recordAttendance(input: unknown): Promise<ActionResult> {
   }
 
   const { error } = await supabase.from("attendance").insert({
+    center_id: lesson.center_id,
     lesson_id: data.lesson_id,
     member_id: data.member_id,
     attended: data.attended,

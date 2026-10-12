@@ -8,3 +8,7 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 local/
+supabase/.temp/
+playwright-report/
+test-results/
+playwright/.cache/

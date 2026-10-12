@@ -6,10 +6,10 @@ Netlify site provided for this app: `https://ftksaasweb.netlify.app`.
 ## 1. Verify the Netlify production site
 
 In Netlify, open the site whose production URL is `ftksaasweb.netlify.app` and verify:
-- It is connected to the private GitHub repository `SXQHex/ftk_saas_web`.
+- It is connected to the private GitHub repository `SXQHex/studioSaaS`.
 - Production branch is `main`.
 - The latest production deploy uses commit `fb8f2f2b0c22f01e07e103973ba67d9c20d9a299` or newer.
-- Build settings use `npm run build`; Node.js is pinned to 26 in `netlify.toml`; do not set a static publish directory.
+- Build settings use `npm run build`; Node.js is pinned to 26 in `.nvmrc` and `package.json`; do not set a static publish directory.
 - Configure these production environment variables:
   - `NEXT_PUBLIC_SUPABASE_URL=https://ysplylnwdfwizmuxvcqg.supabase.co`
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: the StudioSaaS publishable key.
@@ -39,7 +39,6 @@ In the **StudioSaaS** project, open Authentication > URL Configuration:
 - Add `http://localhost:3000/reset-password` only if local development is required.
 - Add specific preview callback URLs temporarily for testing; do not add broad wildcard production entries.
 
-The Security Advisor currently reports leaked-password protection disabled. Enable it under Authentication > Password/Security settings before inviting operational users: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection. Confirm email verification and rate limits match the intended account-provisioning policy.
 
 ## 4. Activate the owner account
 
@@ -57,4 +56,4 @@ After the custom domain responds with valid HTTPS:
 
 ## Deployment limits
 
-GitHub Actions validates dependency audit, lint, production build and an HTTP health smoke test. A direct Netlify management connection is not exposed in the current tool session, so the repo association, environment variables, custom-domain attachment and certificate state must be verified inside Netlify. Cloudflare DNS for the `uye` hostname is configured; the main website records remain unchanged.
+GitHub Actions validates dependency audit, lint, typecheck, unit tests, production build, the clean Supabase schema/privilege smoke test and an HTTP health smoke test. A direct Netlify management connection is not exposed in the current tool session, so the repo association, environment variables, custom-domain attachment and certificate state must be verified inside Netlify. Cloudflare DNS for the `uye` hostname is configured; the main website records remain unchanged.

@@ -17,7 +17,7 @@ export async function adjustCredits(input: unknown): Promise<ActionResult> {
 
   const { data: subscription, error: readError } = await supabase
     .from("subscriptions")
-    .select("id, member_id, status, credits_remaining, credits_purchased")
+    .select("id, member_id, center_id, status, credits_remaining, credits_purchased")
     .eq("id", data.subscription_id)
     .maybeSingle();
   if (readError || !subscription) return fail("Abonelik bulunamadı.");
@@ -29,6 +29,7 @@ export async function adjustCredits(input: unknown): Promise<ActionResult> {
   }
 
   const { error } = await supabase.from("credit_transactions").insert({
+    center_id: subscription.center_id,
     subscription_id: subscription.id,
     member_id: subscription.member_id,
     amount: data.amount,

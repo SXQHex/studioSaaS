@@ -2,7 +2,7 @@ name: Validate
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/**']
   pull_request:
     branches: [main, claude/architecture-improvements, feat/session-room-booking-approval]
 
@@ -35,6 +35,82 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Start isolated Supabase database
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The historical migrations were consolidated into a schema-only baseline.
+          # Hold the new forward migration until the baseline has been loaded.
+          mv supabase/migrations/20261012180000_harden_internal_function_privileges.sql /tmp/harden_internal_function_privileges.sql
+          supabase start
+      - name: Verify schema baseline and privilege migration on a clean database
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase status -o env > /tmp/supabase.env
+          set -a
+          source /tmp/supabase.env
+          set +a
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/schema/00_baseline_snapshot.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/harden_internal_function_privileges.sql
+          cat > /tmp/verify-privileges.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF has_function_privilege('anon', 'app_private.consume_lesson_credit(uuid)', 'EXECUTE')
+              OR has_function_privilege('authenticated', 'app_private.consume_lesson_credit(uuid)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'internal credit routine is still executable';
+            END IF;
+            IF NOT has_function_privilege('authenticated', 'app_private.current_role()', 'EXECUTE') THEN
+              RAISE EXCEPTION 'RLS helper privilege missing';
+            END IF;
+          END
+          $$;
+          SQL
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/verify-privileges.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security_privileges.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/center_isolation.test.sql
+      - name: Measure representative query plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          source /tmp/supabase.env
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/performance_explain.sql | tee /tmp/performance-explain.txt
+          grep -q "Execution Time" /tmp/performance-explain.txt
+      - name: Exercise logical backup and restore in isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          source /tmp/supabase.env
+          DB_CONTAINER="$(docker ps --filter 'name=supabase_db_' --format '{{.Names}}' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          # Use pg_dump/pg_restore shipped with the PostgreSQL 17.11 server image;
+          # the Ubuntu runner's default PostgreSQL client can be an older major version.
+          # Restore only the application-owned schemas. Supabase platform schemas contain
+          # privileged routines (for example Realtime's log_min_messages setting) that
+          # cannot be recreated by the local postgres role in a sibling database.
+          docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres --format=custom --no-owner --no-acl --schema=public --schema=app_private > /tmp/studiosaas-restore-drill.dump
+          test -s /tmp/studiosaas-restore-drill.dump
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE restore_drill"
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE;"
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -c "CREATE SCHEMA public; CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;"
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -c "CREATE SCHEMA auth; CREATE TABLE auth.users (id uuid PRIMARY KEY); CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS 'SELECT NULL::uuid';"
+          docker cp /tmp/studiosaas-restore-drill.dump "$DB_CONTAINER":/tmp/studiosaas-restore-drill.dump
+          docker exec "$DB_CONTAINER" pg_restore -l /tmp/studiosaas-restore-drill.dump | grep -v ' SCHEMA - public ' > /tmp/studiosaas-restore.list
+          docker cp /tmp/studiosaas-restore.list "$DB_CONTAINER":/tmp/studiosaas-restore.list
+          docker exec "$DB_CONTAINER" pg_restore -U postgres -d restore_drill --no-owner --no-acl --exit-on-error -L /tmp/studiosaas-restore.list /tmp/studiosaas-restore-drill.dump
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.members WHERE email LIKE 'perf-%@example.invalid'" | grep -qx '50000'
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.centers WHERE organization_id = '20000000-0000-0000-0000-000000000099'::uuid" | grep -qx '10'
+          echo "Application-schema logical restore passed: 50,000 synthetic members and 10 centers restored."
+      - name: Browser UX and accessibility tests
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
       - name: Smoke test production server
         run: |
           set -euo pipefail

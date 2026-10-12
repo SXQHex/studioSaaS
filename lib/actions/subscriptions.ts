@@ -19,7 +19,16 @@ export async function createSubscription(input: unknown): Promise<ActionResult> 
   const { data, failure } = parseInput(subscriptionSchema, input);
   if (failure) return failure;
 
+  const { data: member, error: memberError } = await supabase
+    .from("members")
+    .select("id, center_id, is_active")
+    .eq("id", data.member_id)
+    .maybeSingle();
+  if (memberError || !member) return fail("Üye bulunamadı.");
+  if (!member.is_active) return fail("Pasif üyeye yeni abonelik açılamaz.");
+
   const { error } = await supabase.from("subscriptions").insert({
+    center_id: member.center_id,
     member_id: data.member_id,
     type: data.type,
     starts_on: data.starts_on,
