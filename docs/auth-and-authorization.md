@@ -14,3 +14,7 @@ RBAC determines allowed operations; ABAC evaluates attributes such as organizati
 - Configure Supabase Authentication: enable email signups and email confirmation; add `https://uye.fethiyetango.com/auth/confirm` and (only for local testing) `http://localhost:3000/auth/confirm` to the redirect URL allowlist. Configure and test SMTP delivery before public launch.
 - Supabase's built-in Auth sign-up rate limits apply; configure CAPTCHA and stricter public abuse protection before opening signups at scale. Confirm whether public self-registration is allowed for the organization.
 - Check registration/confirmation end-to-end on the deployed domain with a disposable email. Browser-only CI tests verify form validation and accessibility but cannot verify real email delivery without an Auth test environment.
+
+## Next.js authentication route group
+
+Authentication pages live in `app/(auth)/login`, `app/(auth)/register`, and `app/(auth)/reset-password`. The confirmation handler lives in `app/(auth)/auth/confirm/route.ts`. The `(auth)` segment is a Next.js route group and does not appear in public URLs; existing `/login`, `/register`, `/reset-password`, and `/auth/confirm` paths remain unchanged. `/reset-password` displays the password form, while `/auth/confirm` verifies emailed tokens and redirects to the appropriate page. The login API remains `/api/auth/login`.
