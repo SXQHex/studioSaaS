@@ -91,13 +91,17 @@ jobs:
           test -n "$DB_CONTAINER"
           # Use pg_dump/pg_restore shipped with the PostgreSQL 17.11 server image;
           # the Ubuntu runner's default PostgreSQL client can be an older major version.
-          docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres --format=custom --no-owner --no-acl > /tmp/studiosaas-restore-drill.dump
+          # Restore only the application-owned schemas. Supabase platform schemas contain
+          # privileged routines (for example Realtime's log_min_messages setting) that
+          # cannot be recreated by the local postgres role in a sibling database.
+          docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres --format=custom --no-owner --no-acl --schema=public --schema=app_private > /tmp/studiosaas-restore-drill.dump
           test -s /tmp/studiosaas-restore-drill.dump
           psql "$DB_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE restore_drill"
+          docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -c "CREATE SCHEMA auth; CREATE TABLE auth.users (id uuid PRIMARY KEY); CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS \\$\\$ SELECT NULL::uuid \\$\\$;"
           docker exec -i "$DB_CONTAINER" pg_restore -U postgres -d restore_drill --no-owner --no-acl --exit-on-error < /tmp/studiosaas-restore-drill.dump
           docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.members WHERE email LIKE 'perf-%@example.invalid'" | grep -qx '50000'
           docker exec "$DB_CONTAINER" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM public.centers WHERE organization_id = '20000000-0000-0000-0000-000000000099'::uuid" | grep -qx '10'
-          echo "Logical backup/restore passed: 50,000 synthetic members and 10 centers restored."
+          echo "Application-schema logical restore passed: 50,000 synthetic members and 10 centers restored."
       - name: Browser UX and accessibility tests
         run: |
           npx playwright install --with-deps chromium
