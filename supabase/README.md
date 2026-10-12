@@ -1,28 +1,19 @@
 # Supabase database files
 
-| Path | What it is |
+| Path | Purpose |
 | --- | --- |
-| `schema/00_baseline_snapshot.sql` | Reconstructed baseline plus the two production hardening migrations listed in its header. **It does not include the newer room-booking and center-isolation migrations below.** |
-| `migrations/20261010030941_…sql` and `20261010032120_…sql` | Production hardening migrations; their effects are reflected in the baseline snapshot. |
-| `migrations/20261011190000_session_rooms_and_requests.sql` | Adds organizations, centers, rooms and manager-approved session requests. Not yet applied to production. |
-| `migrations/20261011200000_center_level_tenancy.sql` | Makes **center** the data-isolation boundary, scopes RLS, and fixes cross-center credit consumption. Not yet applied to production. |
-| `migrations/20261011210000_complete_center_isolation.sql` | Tightens instructor member access to scheduled/completed assigned sessions; a pending request no longer grants member-data access. Not yet applied to production. |
+| `schema/00_baseline_snapshot.sql` | Schema-only reconstruction of the current StudioSaaS database: center tenancy, rooms/session requests, notifications, constraints, indexes, functions, triggers, and RLS. No user or tenant rows are seeded. Run only against a fresh isolated Supabase database. |
+| `migrations/20261012180000_harden_internal_function_privileges.sql` | Forward-only hardening for `app_private` function execution privileges. Test against an isolated database and review the restore plan before applying to production. |
 
 ## Working with the database
 
-- Make schema changes as new files in `migrations/` named `<timestamp>_<description>.sql`, test them
-  on a Supabase branch, then apply them to production.
-- After every DDL change, test against a Supabase branch, re-check the Security and Performance advisors, and regenerate the types:
+- The baseline represents the live schema observed on 2026-10-12. It folds the schema effects of older SQL changes into one reproducible file because three early changes were applied through SQL Editor and their original SQL was not retained.
+- Historical migration files have been removed from the working tree after consolidation into the baseline. The production `supabase_migrations.schema_migrations` history remains unchanged. Do not assume a clean `supabase migration list` or run `supabase db push` against production until local/remote migration history has been explicitly reconciled.
+- For a fresh database, start an isolated Supabase instance, apply `schema/00_baseline_snapshot.sql`, then apply the forward-only migrations in `migrations/` in timestamp order. Do not apply the baseline to an existing database.
+- For a production schema change, first create and verify a backup/restore path, test the SQL against an isolated branch or clone, review the diff and advisor output, and apply only the narrowly scoped migration. Never use the baseline as a production migration.
+- After DDL changes, run Supabase Security and Performance Advisors and regenerate `lib/supabase/database.types.ts`. Nullable RPC arguments are manually widened in the generated type where the SQL function intentionally accepts `NULL`; preserve these annotations when regenerating.
+- Do not put API keys, passwords, access tokens, production user records, or tenant seed rows in SQL files.
 
-  ```bash
-  npx supabase gen types typescript --project-id ysplylnwdfwizmuxvcqg > lib/supabase/database.types.ts
-  ```
+## Live migration history
 
-- To confirm the snapshot still matches production, run `supabase db diff --linked` (needs the Supabase CLI
-  and a linked project). Any output means the snapshot has drifted and should be refreshed.
-
-## Why a snapshot instead of the original migrations
-
-Three early migrations (`mvp_school_membership_attendance`, `remove_group_28_day_expiry`,
-`respect_cancelled_group_lessons`) were applied from the SQL editor and their SQL was never saved. Only their
-names are recorded in `supabase_migrations`. The snapshot captures their combined, current result.
+The connected StudioSaaS project reported these applied versions on 2026-10-12: `20261009135234`, `20261009135835`, `20261009135855`, `20261010030941`, `20261010032120`, `20261011213919`, `20261011213924`, `20261011213930`, `20261012033035`, `20261012033207`, `20261012033310`, and `20261012034617`. Some names/timestamps differ from the historical source filenames that were consolidated; do not rewrite the remote history to match local names.

@@ -1,6 +1,3 @@
-// Generated from the StudioSaaS Supabase project (public schema).
-// Regenerate with: npx supabase gen types typescript --project-id ysplylnwdfwizmuxvcqg > lib/supabase/database.types.ts
-
 export type Json =
   | string
   | number
@@ -20,8 +17,8 @@ export type Database = {
       attendance: {
         Row: {
           attended: boolean
-          checked_in_at: string
           center_id: string
+          checked_in_at: string
           checked_in_by: string | null
           created_at: string
           id: string
@@ -31,8 +28,8 @@ export type Database = {
         }
         Insert: {
           attended?: boolean
+          center_id: string
           checked_in_at?: string
-          center_id?: string
           checked_in_by?: string | null
           created_at?: string
           id?: string
@@ -41,8 +38,8 @@ export type Database = {
           notes?: string | null
         }
         Update: {
-          center_id?: string
           attended?: boolean
+          center_id?: string
           checked_in_at?: string
           checked_in_by?: string | null
           created_at?: string
@@ -53,6 +50,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "attendance_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "attendance_checked_in_by_fkey"
             columns: ["checked_in_by"]
             isOneToOne: false
@@ -60,11 +64,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "attendance_lesson_center_fkey"
+            columns: ["lesson_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id", "center_id"]
+          },
+          {
             foreignKeyName: "attendance_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_member_center_fkey"
+            columns: ["member_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "center_id"]
           },
           {
             foreignKeyName: "attendance_member_id_fkey"
@@ -75,12 +93,80 @@ export type Database = {
           },
         ]
       }
+      center_admins: {
+        Row: {
+          center_id: string
+          created_at: string
+          profile_id: string
+        }
+        Insert: {
+          center_id: string
+          created_at?: string
+          profile_id: string
+        }
+        Update: {
+          center_id?: string
+          created_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "center_admins_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "center_admins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      centers: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           amount: number
+          center_id: string
           created_at: string
           created_by: string | null
-          center_id: string
           id: string
           lesson_id: string | null
           member_id: string
@@ -90,9 +176,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          center_id: string
           created_at?: string
           created_by?: string | null
-          center_id?: string
           id?: string
           lesson_id?: string | null
           member_id: string
@@ -101,8 +187,8 @@ export type Database = {
           subscription_id: string
         }
         Update: {
-          center_id?: string
           amount?: number
+          center_id?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -114,11 +200,25 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "credit_transactions_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "credit_transactions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_lesson_center_fkey"
+            columns: ["lesson_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id", "center_id"]
           },
           {
             foreignKeyName: "credit_transactions_lesson_id_fkey"
@@ -128,11 +228,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "credit_transactions_member_center_fkey"
+            columns: ["member_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "center_id"]
+          },
+          {
             foreignKeyName: "credit_transactions_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_subscription_center_fkey"
+            columns: ["subscription_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id", "center_id"]
           },
           {
             foreignKeyName: "credit_transactions_subscription_id_fkey"
@@ -143,75 +257,18 @@ export type Database = {
           },
         ]
       }
-      organizations: {
-        Row: { id: string; name: string; slug: string; is_active: boolean; created_at: string; created_by: string | null }
-        Insert: { id?: string; name: string; slug: string; is_active?: boolean; created_at?: string; created_by?: string | null }
-        Update: { id?: string; name?: string; slug?: string; is_active?: boolean; created_at?: string; created_by?: string | null }
-        Relationships: [{ foreignKeyName: "organizations_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }]
-      }
-      center_admins: {
-        Row: { center_id: string; profile_id: string; created_at: string }
-        Insert: { center_id: string; profile_id: string; created_at?: string }
-        Update: { center_id?: string; profile_id?: string; created_at?: string }
-        Relationships: []
-      }
-      centers: {
-        Row: { id: string; organization_id: string; name: string; address: string | null; is_active: boolean; created_at: string }
-        Insert: { id?: string; organization_id: string; name: string; address?: string | null; is_active?: boolean; created_at?: string }
-        Update: { id?: string; organization_id?: string; name?: string; address?: string | null; is_active?: boolean; created_at?: string }
-        Relationships: [{ foreignKeyName: "centers_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }]
-      }
-      rooms: {
-        Row: { id: string; center_id: string; name: string; capacity: number; is_active: boolean; created_at: string }
-        Insert: { id?: string; center_id: string; name: string; capacity?: number; is_active?: boolean; created_at?: string }
-        Update: { id?: string; center_id?: string; name?: string; capacity?: number; is_active?: boolean; created_at?: string }
-        Relationships: [{ foreignKeyName: "rooms_center_id_fkey"; columns: ["center_id"]; isOneToOne: false; referencedRelation: "centers"; referencedColumns: ["id"] }]
-      }
-      session_requests: {
-        Row: {
-          id: string; organization_id: string; center_id: string; room_id: string; instructor_id: string; requested_by: string;
-          session_type: Database["public"]["Enums"]["lesson_type"]; title: string; private_member_id: string | null;
-          starts_at: string; ends_at: string; expected_attendees: number; notes: string | null;
-          status: string; reviewed_by: string | null; reviewed_at: string | null; review_note: string | null;
-          approved_lesson_id: string | null; created_at: string;
-        }
-        Insert: {
-          id?: string; organization_id: string; center_id: string; room_id: string; instructor_id: string; requested_by: string;
-          session_type: Database["public"]["Enums"]["lesson_type"]; title: string; private_member_id?: string | null;
-          starts_at: string; ends_at: string; expected_attendees?: number; notes?: string | null;
-          status?: string; reviewed_by?: string | null; reviewed_at?: string | null; review_note?: string | null;
-          approved_lesson_id?: string | null; created_at?: string;
-        }
-        Update: {
-          id?: string; organization_id?: string; center_id?: string; room_id?: string; instructor_id?: string; requested_by?: string;
-          session_type?: Database["public"]["Enums"]["lesson_type"]; title?: string; private_member_id?: string | null;
-          starts_at?: string; ends_at?: string; expected_attendees?: number; notes?: string | null;
-          status?: string; reviewed_by?: string | null; reviewed_at?: string | null; review_note?: string | null;
-          approved_lesson_id?: string | null; created_at?: string;
-        }
-        Relationships: [
-          { foreignKeyName: "session_requests_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_center_id_fkey"; columns: ["center_id"]; isOneToOne: false; referencedRelation: "centers"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_room_id_fkey"; columns: ["room_id"]; isOneToOne: false; referencedRelation: "rooms"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_instructor_id_fkey"; columns: ["instructor_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_requested_by_fkey"; columns: ["requested_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_private_member_id_fkey"; columns: ["private_member_id"]; isOneToOne: false; referencedRelation: "members"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_reviewed_by_fkey"; columns: ["reviewed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
-          { foreignKeyName: "session_requests_approved_lesson_id_fkey"; columns: ["approved_lesson_id"]; isOneToOne: false; referencedRelation: "lessons"; referencedColumns: ["id"] }
-        ]
-      }
       lessons: {
         Row: {
           center_id: string
-          room_id: string | null
-          expected_attendees: number | null
           created_at: string
           created_by: string | null
           ends_at: string | null
+          expected_attendees: number | null
           id: string
           instructor_id: string | null
           notes: string | null
           private_member_id: string | null
+          room_id: string | null
           starts_at: string
           status: Database["public"]["Enums"]["lesson_status"]
           title: string
@@ -220,15 +277,15 @@ export type Database = {
         }
         Insert: {
           center_id: string
-          room_id?: string | null
-          expected_attendees?: number | null
           created_at?: string
           created_by?: string | null
           ends_at?: string | null
+          expected_attendees?: number | null
           id?: string
           instructor_id?: string | null
           notes?: string | null
           private_member_id?: string | null
+          room_id?: string | null
           starts_at: string
           status?: Database["public"]["Enums"]["lesson_status"]
           title: string
@@ -237,15 +294,15 @@ export type Database = {
         }
         Update: {
           center_id?: string
-          room_id?: string | null
-          expected_attendees?: number | null
           created_at?: string
           created_by?: string | null
           ends_at?: string | null
+          expected_attendees?: number | null
           id?: string
           instructor_id?: string | null
           notes?: string | null
           private_member_id?: string | null
+          room_id?: string | null
           starts_at?: string
           status?: Database["public"]["Enums"]["lesson_status"]
           title?: string
@@ -253,6 +310,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "lessons_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lessons_created_by_fkey"
             columns: ["created_by"]
@@ -268,6 +332,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lessons_private_member_center_fkey"
+            columns: ["private_member_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "center_id"]
+          },
+          {
             foreignKeyName: "lessons_private_member_id_fkey"
             columns: ["private_member_id"]
             isOneToOne: false
@@ -275,11 +346,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lessons_center_id_fkey"
-            columns: ["center_id"]
+            foreignKeyName: "lessons_room_center_fkey"
+            columns: ["room_id", "center_id"]
             isOneToOne: false
-            referencedRelation: "centers"
-            referencedColumns: ["id"]
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "center_id"]
           },
           {
             foreignKeyName: "lessons_room_id_fkey"
@@ -288,16 +359,6 @@ export type Database = {
             referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      notifications: {
-        Row: { id: string; recipient_id: string; organization_id: string | null; center_id: string | null; type: string; title: string; body: string; href: string; read_at: string | null; created_at: string }
-        Insert: { id?: string; recipient_id: string; organization_id?: string | null; center_id?: string | null; type: string; title: string; body: string; href?: string; read_at?: string | null; created_at?: string }
-        Update: { id?: string; recipient_id?: string; organization_id?: string | null; center_id?: string | null; type?: string; title?: string; body?: string; href?: string; read_at?: string | null; created_at?: string }
-        Relationships: [
-          { foreignKeyName: "notifications_recipient_id_fkey"; columns: ["recipient_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
-          { foreignKeyName: "notifications_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
-          { foreignKeyName: "notifications_center_id_fkey"; columns: ["center_id"]; isOneToOne: false; referencedRelation: "centers"; referencedColumns: ["id"] }
         ]
       }
       members: {
@@ -339,9 +400,112 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "members_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "members_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string
+          center_id: string | null
+          created_at: string
+          href: string
+          id: string
+          organization_id: string | null
+          read_at: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body: string
+          center_id?: string | null
+          created_at?: string
+          href?: string
+          id?: string
+          organization_id?: string | null
+          read_at?: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string
+          center_id?: string | null
+          created_at?: string
+          href?: string
+          id?: string
+          organization_id?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -371,11 +535,190 @@ export type Database = {
         }
         Relationships: []
       }
+      rooms: {
+        Row: {
+          capacity: number
+          center_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          capacity?: number
+          center_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          capacity?: number
+          center_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_requests: {
+        Row: {
+          approved_lesson_id: string | null
+          center_id: string
+          created_at: string
+          ends_at: string
+          expected_attendees: number
+          id: string
+          instructor_id: string
+          notes: string | null
+          organization_id: string
+          private_member_id: string | null
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          room_id: string
+          session_type: Database["public"]["Enums"]["lesson_type"]
+          starts_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          approved_lesson_id?: string | null
+          center_id: string
+          created_at?: string
+          ends_at: string
+          expected_attendees?: number
+          id?: string
+          instructor_id: string
+          notes?: string | null
+          organization_id: string
+          private_member_id?: string | null
+          requested_by: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id: string
+          session_type: Database["public"]["Enums"]["lesson_type"]
+          starts_at: string
+          status?: string
+          title: string
+        }
+        Update: {
+          approved_lesson_id?: string | null
+          center_id?: string
+          created_at?: string
+          ends_at?: string
+          expected_attendees?: number
+          id?: string
+          instructor_id?: string
+          notes?: string | null
+          organization_id?: string
+          private_member_id?: string | null
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id?: string
+          session_type?: Database["public"]["Enums"]["lesson_type"]
+          starts_at?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_requests_approved_lesson_id_fkey"
+            columns: ["approved_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_center_organization_fkey"
+            columns: ["center_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "session_requests_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_private_member_center_fkey"
+            columns: ["private_member_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "center_id"]
+          },
+          {
+            foreignKeyName: "session_requests_private_member_id_fkey"
+            columns: ["private_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_requests_room_center_fkey"
+            columns: ["room_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "center_id"]
+          },
+          {
+            foreignKeyName: "session_requests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           amount: number
-          created_at: string
           center_id: string
+          created_at: string
           created_by: string | null
           credits_purchased: number
           credits_remaining: number
@@ -391,8 +734,8 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          center_id: string
           created_at?: string
-          center_id?: string
           created_by?: string | null
           credits_purchased: number
           credits_remaining: number
@@ -407,8 +750,8 @@ export type Database = {
           type: Database["public"]["Enums"]["subscription_type"]
         }
         Update: {
-          center_id?: string
           amount?: number
+          center_id?: string
           created_at?: string
           created_by?: string | null
           credits_purchased?: number
@@ -425,11 +768,25 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "subscriptions_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subscriptions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_member_center_fkey"
+            columns: ["member_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "center_id"]
           },
           {
             foreignKeyName: "subscriptions_member_id_fkey"
@@ -445,12 +802,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_center: { Args: { p_organization_id: string; p_name: string; p_address?: string | null }; Returns: string }
-      grant_center_admin: { Args: { p_center_id: string; p_profile_id: string }; Returns: undefined }
-      revoke_center_admin: { Args: { p_center_id: string; p_profile_id: string }; Returns: undefined }
-      list_requestable_members: { Args: { p_center_id: string }; Returns: { id: string; full_name: string }[] }
-      create_session_request: { Args: { p_center_id: string; p_room_id: string; p_session_type: Database["public"]["Enums"]["lesson_type"]; p_title: string; p_private_member_id: string | null; p_starts_at: string; p_ends_at: string; p_expected_attendees: number; p_notes: string | null; p_instructor_id?: string | null }; Returns: string }
-      review_session_request: { Args: { p_request_id: string; p_approve: boolean; p_review_note?: string | null }; Returns: string | null }
+      create_center: {
+        Args: { p_address?: string | null; p_name: string; p_organization_id: string }
+        Returns: string
+      }
+      create_session_request: {
+        Args: {
+          p_center_id: string
+          p_ends_at: string
+          p_expected_attendees: number
+          p_instructor_id?: string | null
+          p_notes: string | null
+          p_private_member_id: string | null
+          p_room_id: string
+          p_session_type: Database["public"]["Enums"]["lesson_type"]
+          p_starts_at: string
+          p_title: string
+        }
+        Returns: string
+      }
+      grant_center_admin: {
+        Args: { p_center_id: string; p_profile_id: string }
+        Returns: undefined
+      }
+      list_requestable_members: {
+        Args: { p_center_id: string }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
+      review_session_request: {
+        Args: {
+          p_approve: boolean
+          p_request_id: string
+          p_review_note?: string | null
+        }
+        Returns: string
+      }
+      revoke_center_admin: {
+        Args: { p_center_id: string; p_profile_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "instructor" | "student"

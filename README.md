@@ -30,7 +30,7 @@ lib/
   actions/                Server Actions: every write goes through here
   data/                   typed read queries with server-side search + pagination
 components/               shared UI pieces (filters, pagination, notices, action hook)
-supabase/                 schema snapshot and migrations (center-level isolation and room booking)
+supabase/                 schema-only baseline, forward migrations and SQL contract tests
 tests/                    unit tests (npm test)
 ```
 
@@ -60,11 +60,11 @@ See [docs/initial-admin-setup.md](docs/initial-admin-setup.md) to securely promo
 - Never put a Supabase `service_role`/secret key in frontend environment variables.
 - Database access must be protected by Supabase RLS policies.
 - Production responses include browser security headers; authenticated routes are not indexed.
-- CI runs a high-severity dependency audit, Biome lint, a production build and an HTTP health smoke test.
+- CI runs a high-severity dependency audit, Biome lint, TypeScript checks, unit tests, a production build, a clean Supabase schema/privilege smoke test, and an HTTP health smoke test.
 - Public signup must never grant the `admin` role. Role assignment belongs to trusted server-side/database logic.
 
 ## Deployment
 
-Import this repository as a **new Netlify site** and configure the environment variables listed in `.env.example`. Do not attach this repository to the existing `fethiyetango.netlify.app` marketing site. Netlify is pinned to Node.js 26 in `netlify.toml`. Let Netlify use its Next.js runtime/adapter; do not configure a static-only export.
+Import this repository as a **new Netlify site** and configure the environment variables listed in `.env.example`. Do not attach this repository to the existing `fethiyetango.netlify.app` marketing site. Node.js 26 is enforced by `.nvmrc` and `package.json`. Let Netlify use its Next.js runtime/adapter; do not configure a static-only export.
 
-For the custom domain and Auth callback allowlist, follow [docs/production-deployment.md](docs/production-deployment.md).
+For the custom domain and Auth callback allowlist, follow [docs/production-deployment.md](docs/production-deployment.md). Backup/restore operations are documented in [docs/backup-and-restore.md](docs/backup-and-restore.md).
