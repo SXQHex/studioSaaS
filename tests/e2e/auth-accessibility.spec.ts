@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-for (const route of ['/login', '/reset-password']) {
+for (const route of ['/login', '/reset-password', '/register']) {
   test(`${route} has no serious/critical axe violations`, async ({ page }) => {
     await page.goto(route);
     await expect(page.locator('main')).toBeVisible();
@@ -38,4 +38,25 @@ test('login form is keyboard reachable and exposes required fields', async ({ pa
   await expect(password).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(submit).toBeFocused();
+});
+
+test('registration requires matching passwords and never exposes role selection', async ({ page }) => {
+  await page.goto('/register');
+  await expect(page.getByRole('heading', { name: 'Hesap oluşturun' })).toBeVisible();
+  await expect(page.getByLabel('Ad soyad')).toBeVisible();
+  await expect(page.getByLabel('E-posta')).toBeVisible();
+  await expect(page.getByLabel('Şifre', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Şifreyi tekrar girin')).toBeVisible();
+  await expect(page.locator('select[name="role"]')).toHaveCount(0);
+  await page.getByLabel('Ad soyad').fill('Test Kullanıcı');
+  await page.getByLabel('E-posta').fill('test@example.invalid');
+  await page.getByLabel('Şifre', { exact: true }).fill('strong-password-123');
+  await page.getByLabel('Şifreyi tekrar girin').fill('different-password');
+  await page.getByRole('button', { name: /Hesap oluştur/ }).click();
+  await expect(page.locator('p.notice.error[role="alert"]')).toContainText('Şifreler eşleşmiyor');
+});
+
+test('login offers registration link', async ({ page }) => {
+  await page.goto('/login');
+  await expect(page.getByRole('link', { name: 'Hesap oluştur' })).toHaveAttribute('href', '/register');
 });
