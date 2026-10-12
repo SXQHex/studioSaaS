@@ -1,8 +1,8 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { CalendarDays, ChevronLeft, ChevronRight, CirclePlus, Clock3, Edit2, UserRound, X } from "lucide-react";
 import Link from "next/link";
-import { CalendarDays, CirclePlus, Clock3, Edit2, UserRound, X } from "lucide-react";
+import { type FormEvent, useState } from "react";
 import { ListFilters } from "@/components/list-filters";
 import { PageNotice } from "@/components/page-notice";
 import { Pagination } from "@/components/pagination";
@@ -61,6 +61,7 @@ function toIso(value: string) {
 
 export function LessonsManager({
   lessons,
+  calendarLessons,
   total,
   stats,
   members,
@@ -74,6 +75,7 @@ export function LessonsManager({
   canManage,
 }: {
   lessons: Lesson[];
+  calendarLessons: Lesson[];
   total: number;
   stats: { total: number; scheduled: number; completed: number };
   members: MemberOption[];
@@ -87,10 +89,24 @@ export function LessonsManager({
   canManage: boolean;
 }) {
   const [formOpen, setFormOpen] = useState(false);
+  const [calendarMode, setCalendarMode] = useState<"list" | "week" | "month">("list");
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<LessonForm>(emptyForm);
   const { busy, pendingId, error, notice, setError, reset, run } = useActionRunner();
   const formRooms = rooms.filter((room) => room.center_id === form.center_id);
+  const dayStart = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const mondayStart = (date: Date) => { const start = dayStart(date); start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); return start; };
+  const calendarStart = calendarMode === "week" ? mondayStart(calendarDate) : new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1);
+  const calendarEnd = calendarMode === "week" ? new Date(calendarStart.getFullYear(), calendarStart.getMonth(), calendarStart.getDate() + 7) : new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
+  const gridStart = calendarMode === "week" ? calendarStart : mondayStart(calendarStart);
+  const gridEnd = calendarMode === "week" ? calendarEnd : new Date(mondayStart(new Date(calendarEnd.getFullYear(), calendarEnd.getMonth(), calendarEnd.getDate() - 1)).getTime() + 6 * 86400000);
+  const calendarDays: Date[] = [];
+  for (let day = new Date(gridStart); day <= gridEnd; day.setDate(day.getDate() + 1)) calendarDays.push(new Date(day));
+  const lessonsForDay = (date: Date) => calendarLessons.filter((lesson) => { const start = new Date(lesson.starts_at); return start.getFullYear() === date.getFullYear() && start.getMonth() === date.getMonth() && start.getDate() === date.getDate(); });
+  const calendarTitle = calendarMode === "week"
+    ? new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" }).format(calendarStart) + " – " + new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", year: "numeric" }).format(new Date(calendarEnd.getTime() - 1))
+    : new Intl.DateTimeFormat("tr-TR", { month: "long", year: "numeric" }).format(calendarDate);
 
   function openCreate() {
     setEditingId(null);
@@ -190,7 +206,17 @@ export function LessonsManager({
       )}
 
       <section className="table-card">
-        <div className="table-toolbar"><div><h2>Ders listesi</h2><p>{total} kayıt bulundu</p></div><ListFilters action="/dashboard/lessons" query={query} searchPlaceholder="Ders ara…" searchLabel="Ders ara" searchIcon={<CalendarDays size={16} />}><select className="filter-select" name="status" defaultValue={status} aria-label="Duruma göre filtrele"><option value="">Tüm durumlar</option><option value="scheduled">Planlandı</option><option value="completed">Tamamlandı</option><option value="cancelled">İptal</option><option value="postponed">Ertelendi</option></select></ListFilters></div>
+        <div className="calendar-toolbar">
+          <div className="calendar-view-switch">
+            <button type="button" className={calendarMode === "list" ? "active" : ""} onClick={() => setCalendarMode("list")}>Liste</button>
+            <button type="button" className={calendarMode === "week" ? "active" : ""} onClick={() => setCalendarMode("week")}>Hafta</button>
+            <button type="button" className={calendarMode === "month" ? "active" : ""} onClick={() => setCalendarMode("month")}>Ay</button>
+          </div>
+          {calendarMode !== "list" && <div className="calendar-nav"><button type="button" className="icon-button" aria-label="Önceki dönem" onClick={() => setCalendarDate((date) => { const next = new Date(date); calendarMode === "week" ? next.setDate(next.getDate() - 7) : next.setMonth(next.getMonth() - 1); return next; })}><ChevronLeft size={17}/></button><strong>{calendarTitle}</strong><button type="button" className="icon-button" aria-label="Sonraki dönem" onClick={() => setCalendarDate((date) => { const next = new Date(date); calendarMode === "week" ? next.setDate(next.getDate() + 7) : next.setMonth(next.getMonth() + 1); return next; })}><ChevronRight size={17}/></button><button type="button" className="secondary-action" onClick={() => setCalendarDate(new Date())}>Bugün</button></div>}
+        </div>
+        {calendarMode !== "list" ? <div className={"visual-calendar " + (calendarMode === "week" ? "week-calendar" : "month-calendar")}>
+          {calendarDays.map((date) => { const dayLessons = lessonsForDay(date); const inMonth = date.getMonth() === calendarDate.getMonth(); return <div className={"calendar-day" + (calendarMode === "month" && !inMonth ? " outside-month" : "") + (dayStart(date).getTime() === dayStart(new Date()).getTime() ? " today" : "")} key={date.toISOString()}><div className="calendar-day-heading"><span>{new Intl.DateTimeFormat("tr-TR", { weekday: "short" }).format(date)}</span><strong>{date.getDate()}</strong></div><div className="calendar-day-events">{dayLessons.map((lesson) => <div key={lesson.id} className={"calendar-event status-" + lesson.status} title={lesson.title + " · " + new Intl.DateTimeFormat("tr-TR", { timeStyle: "short" }).format(new Date(lesson.starts_at))}><time>{new Intl.DateTimeFormat("tr-TR", { timeStyle: "short" }).format(new Date(lesson.starts_at))}</time><span>{lesson.title}</span></div>)}{dayLessons.length === 0 && calendarMode === "week" && <small className="calendar-empty-day">Ders yok</small>}</div></div>; })}
+        </div> : <><div className="table-toolbar"><div><h2>Ders listesi</h2><p>{total} kayıt bulundu</p></div><ListFilters action="/dashboard/lessons" query={query} searchPlaceholder="Ders ara…" searchLabel="Ders ara" searchIcon={<CalendarDays size={16} />}><select className="filter-select" name="status" defaultValue={status} aria-label="Duruma göre filtrele"><option value="">Tüm durumlar</option><option value="scheduled">Planlandı</option><option value="completed">Tamamlandı</option><option value="cancelled">İptal</option><option value="postponed">Ertelendi</option></select></ListFilters></div>
         {stats.total === 0 && !loadError ? (
           <div className="empty-state"><span className="empty-icon"><CalendarDays size={24} /></span><h3>Henüz ders planlanmadı</h3><p>İlk dersi oluşturarak takviminizi hazırlayın.</p>{canManage && <button className="secondary-action" type="button" onClick={openCreate}>Ders planla</button>}</div>
         ) : lessons.length === 0 ? (
@@ -209,6 +235,7 @@ export function LessonsManager({
           </table></div>
         )}
         <Pagination basePath="/dashboard/lessons" params={{ q: query, status }} page={page} total={total} />
+        </>}
       </section>
     </>
   );

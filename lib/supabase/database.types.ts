@@ -290,6 +290,16 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: { id: string; recipient_id: string; organization_id: string | null; center_id: string | null; type: string; title: string; body: string; href: string; read_at: string | null; created_at: string }
+        Insert: { id?: string; recipient_id: string; organization_id?: string | null; center_id?: string | null; type: string; title: string; body: string; href?: string; read_at?: string | null; created_at?: string }
+        Update: { id?: string; recipient_id?: string; organization_id?: string | null; center_id?: string | null; type?: string; title?: string; body?: string; href?: string; read_at?: string | null; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "notifications_recipient_id_fkey"; columns: ["recipient_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "notifications_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "notifications_center_id_fkey"; columns: ["center_id"]; isOneToOne: false; referencedRelation: "centers"; referencedColumns: ["id"] }
+        ]
+      }
       members: {
         Row: {
           center_id: string

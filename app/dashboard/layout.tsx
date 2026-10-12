@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getSession } from "@/lib/supabase/session";
+import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "./dashboard-shell";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +20,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login");
   }
 
+  const supabase = await createClient();
+  const unreadResult = session.status === "ready"
+    ? await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("recipient_id", session.userId).is("read_at", null)
+    : { count: 0, error: null };
+
   return (
     <DashboardShell
       email={session.status === "ready" ? session.email : ""}
       roleLabel={session.status === "ready" ? session.profile.role : "Rol doğrulanamadı"}
+      unreadNotificationCount={unreadResult.count ?? 0}
     >
       {children}
     </DashboardShell>
