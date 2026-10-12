@@ -12,6 +12,34 @@ const resourceSchema = z.object({ name: label });
 const centerSchema = z.object({ organization_id: uuid, name: label, address: z.string().trim().max(500).nullable() });
 const roomSchema = z.object({ center_id: uuid, name: z.string().trim().min(1).max(120), capacity: z.number().int().min(1).max(500) });
 const centerAdminSchema = z.object({ center_id: uuid, profile_id: uuid });
+async function sendSessionRequestEmail(
+  supabase: Awaited<ReturnType<typeof import("@/lib/supabase/server").createClient>>,
+  requestId: string,
+  event: "created" | "approved" | "rejected",
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke("send-session-request-email", {
+      body: { request_id: requestId, event },
+    });
+    if (error || data?.ok !== true) {
+      console.error("Session-request email notification was not delivered", {
+        event,
+        requestId,
+        error: error?.message ?? (typeof data?.error === "string" ? data.error : "unknown"),
+      });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Session-request email notification failed", {
+      event,
+      requestId,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+    return false;
+  }
+}
+
 function refresh() {
   revalidatePath("/dashboard/session-requests");
   revalidatePath("/dashboard/lessons");
@@ -97,7 +125,7 @@ export async function createGroupProposal(input: unknown): Promise<ActionResult>
   if (parsed.data.session_type !== "group" || parsed.data.private_member_id !== null) {
     return fail("Yönetici yalnızca grup dersi taslağı oluşturabilir.");
   }
-  const { error } = await supabase.rpc("create_session_request", {
+  const { data: requestId, error } = await supabase.rpc("create_session_request", {
     p_center_id: parsed.data.center_id,
     p_room_id: parsed.data.room_id,
     p_session_type: "group",
@@ -109,9 +137,12 @@ export async function createGroupProposal(input: unknown): Promise<ActionResult>
     p_notes: parsed.data.notes,
     p_instructor_id: instructor.data.instructor_id,
   });
-  if (error) return fail(dbErrorMessage(error, "Grup dersi taslağı oluşturulamadı."));
+  if (error || !requestId) return fail(dbErrorMessage(error, "Grup dersi taslağı oluşturulamadı."));
+  const emailDelivered = await sendSessionRequestEmail(supabase, requestId, "created");
   refresh();
-  return ok("Grup dersi taslağı oluşturuldu. Onaylanana kadar oda rezerve edilmez.");
+  return ok(emailDelivered
+    ? "Grup dersi taslağı oluşturuldu ve eğitmene e-posta gönderildi."
+    : "Grup dersi taslağı oluşturuldu. Uygulama içi bildirim kaydedildi; e-posta ayarını kontrol edin.");
 }
 
 export async function createSessionRequest(input: unknown): Promise<ActionResult> {
@@ -131,8 +162,11 @@ export async function createSessionRequest(input: unknown): Promise<ActionResult
     p_instructor_id: null,
   });
   if (error || !data) return fail(dbErrorMessage(error, "Seans talebi oluşturulamadı."));
+  const emailDelivered = await sendSessionRequestEmail(supabase, data, "created");
   refresh();
-  return ok("Talep yöneticiye iletildi. Onaylanana kadar oda rezerve edilmez.");
+  return ok(emailDelivered
+    ? "Talep yöneticiye iletildi; merkez yöneticilerine e-posta gönderildi."
+    : "Talep kaydedildi. Uygulama içi bildirim hazır; e-posta gönderimini kontrol edin.");
 }
 
 export async function reviewSessionRequest(input: unknown): Promise<ActionResult> {
@@ -145,6 +179,14 @@ export async function reviewSessionRequest(input: unknown): Promise<ActionResult
     p_review_note: parsed.data.note,
   });
   if (error) return fail(dbErrorMessage(error, "Talep değerlendirilemedi. Oda veya eğitmen çakışmasını kontrol edin."));
+  const emailDelivered = await sendSessionRequestEmail(
+    supabase,
+    parsed.data.id,
+    parsed.data.approve ? "approved" : "rejected",
+  );
   refresh();
-  return ok(parsed.data.approve ? "Talep onaylandı ve seans rezerve edildi." : "Talep reddedildi.");
+  const resultMessage = parsed.data.approve ? "Talep onaylandı ve seans rezerve edildi." : "Talep reddedildi.";
+  return ok(emailDelivered
+    ? resultMessage + " Talep sahibi ve eğitmene e-posta gönderildi."
+    : resultMessage + " Uygulama içi bildirim kaydedildi; e-posta gönderimini kontrol edin.");
 }
