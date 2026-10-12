@@ -23,12 +23,16 @@ export default function LoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setMessage("");
     try {
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) throw authError;
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok || !result.ok) throw new Error(result.error || "Giriş yapılamadı.");
       router.replace("/dashboard"); router.refresh();
-    } catch {
-      setError("Giriş yapılamadı. E-posta ve şifrenizi kontrol edin.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Giriş yapılamadı. E-posta ve şifrenizi kontrol edin.");
     } finally { setBusy(false); }
   }
 

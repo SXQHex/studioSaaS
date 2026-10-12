@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   Activity,
+  BarChart3,
+  Bell,
   CalendarDays,
   CreditCard,
   LayoutDashboard,
@@ -11,6 +11,8 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { SignOutButton } from "@/app/dashboard/sign-out-button";
 
@@ -27,23 +29,28 @@ const navigation = [
   { href: "/dashboard/attendance", label: "Yoklama", icon: Activity },
   { href: "/dashboard/subscriptions", label: "Abonelikler", icon: CreditCard },
   { href: "/dashboard/credits", label: "Kredi hareketleri", icon: Wallet },
+  { href: "/dashboard/session-requests", label: "Seans talepleri", icon: CalendarDays },
+  { href: "/dashboard/notifications", label: "Bildirimler", icon: Bell },
+  { href: "/dashboard/reports", label: "Raporlama", icon: BarChart3 },
 ];
 
 export function DashboardShell({
   children,
   email,
   roleLabel,
+  unreadNotificationCount,
 }: {
   children: ReactNode;
   email: string;
   roleLabel: string;
+  unreadNotificationCount: number;
 }) {
   const pathname = usePathname();
   const visibleNavigation = roleLabel === "admin"
     ? navigation
     : roleLabel === "instructor"
-      ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance"].includes(item.href))
-      : navigation.filter((item) => item.href === "/dashboard");
+      ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications"].includes(item.href))
+      : navigation.filter((item) => ["/dashboard", "/dashboard/notifications"].includes(item.href));
 
   return (
     <main className="dashboard-shell">
@@ -59,7 +66,8 @@ export function DashboardShell({
             const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
             return (
               <Link key={item.href} className={`side-link${active ? " active" : ""}`} href={item.href} aria-current={active ? "page" : undefined}>
-                <Icon size={18} aria-hidden="true" /> {item.label}
+                <Icon size={18} aria-hidden="true" /> <span className="side-link-label">{item.label}</span>
+                {item.href === "/dashboard/notifications" && unreadNotificationCount > 0 && <span className="notification-count" title={`${unreadNotificationCount} okunmamış bildirim`}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</span>}
               </Link>
             );
           })}
@@ -77,7 +85,7 @@ export function DashboardShell({
           <div className="account-chip"><span className="avatar">{email.slice(0, 1).toLocaleUpperCase("tr-TR") || "S"}</span><span><strong>{email || "Hesap"}</strong><small>{roleNames[roleLabel] ?? roleLabel}</small></span></div>
         </header>
         {roleLabel === "student" && (
-          <div className="role-banner">Bu hesap öğrenci rolünde. Yönetim ekranları için stüdyo yöneticinizden erişim isteyin.</div>
+          <div className="role-banner">Öğrenci panelinizde abonelik, kredi, ders ve yoklama bilgilerinizi görüntüleyebilirsiniz.</div>
         )}
         {roleLabel === "instructor" && (
           <div className="role-banner">Eğitmen erişimi: ders takvimi ve yoklama kullanılabilir; üyelik, abonelik ve kredi yönetimi yönetici rolü gerektirir.</div>

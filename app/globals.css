@@ -323,3 +323,64 @@ button:disabled { cursor: wait; opacity: .68; }
 .student-access-panel { margin-top: 22px; }
 .student-access-content { padding: 18px 20px 20px; border-top: 1px solid #edf0ed; }
 .student-access-content p { max-width: 680px; margin: 0; color: #68776c; font-size: 12px; line-height: 1.7; }
+
+/* Student workspace, calendar, notifications and reports */
+.student-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.student-list { padding: 0 22px; }
+.student-list-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; padding: 12px 0; border-bottom: 1px solid #edf0ed; }
+.student-list-row:last-child { border-bottom: 0; }
+.student-list-row > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.student-list-row strong { font-size: 12px; line-height: 1.5; }
+.student-list-row small { color: #89938c; font-size: 11px; line-height: 1.55; }
+.student-credit-pill { display: inline-flex; flex: 0 0 auto; align-items: center; padding: 7px 10px; border: 1px solid #dce9df; border-radius: 100px; background: #f3f8f4; color: #2c6745; font-size: 11px; font-weight: 800; }
+.student-empty { padding: 21px 23px; color: #818c84; font-size: 12px; line-height: 1.7; }
+.student-history-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.credit-amount { color: #2f7047; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.credit-amount.negative { color: #9b473e; }
+.metric-action { display: inline-flex; align-items: center; gap: 5px; margin-top: 13px; color: #477157; font-size: 10px; font-weight: 800; }
+.calendar-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 20px; border-bottom: 1px solid #edf0ed; }
+.calendar-view-switch { display: inline-flex; padding: 3px; border: 1px solid #e1e7e2; border-radius: 9px; background: #f7f9f7; }
+.calendar-view-switch button { min-height: 31px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: #647167; font-size: 11px; cursor: pointer; }
+.calendar-view-switch button.active { background: #fff; color: #22513c; font-weight: 800; box-shadow: 0 1px 4px rgb(25 50 35 / 10%); }
+.calendar-nav { display: flex; align-items: center; gap: 9px; }
+.calendar-nav strong { min-width: 150px; color: #34443a; font-size: 12px; text-align: center; }
+.visual-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.calendar-day { min-width: 0; min-height: 118px; padding: 9px; border-right: 1px solid #edf0ed; border-bottom: 1px solid #edf0ed; }
+.calendar-day:nth-child(7n) { border-right: 0; }
+.month-calendar .calendar-day { min-height: 126px; }
+.calendar-day.outside-month { background: #fafbf9; color: #a8b0aa; }
+.calendar-day.today { background: #f2f8f3; }
+.calendar-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 8px; color: #77847a; font-size: 10px; text-transform: capitalize; }
+.calendar-day-heading strong { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #34443a; font-size: 11px; }
+.calendar-day.today .calendar-day-heading strong { background: #285c49; color: #fff; }
+.calendar-day-events { display: flex; flex-direction: column; gap: 4px; }
+.calendar-event { display: flex; flex-direction: column; gap: 3px; padding: 6px 7px; border-left: 3px solid #5d9770; border-radius: 4px; background: #edf6ef; color: #315b3d; font-size: 10px; line-height: 1.35; }
+.calendar-event time { font-size: 9px; font-weight: 800; }
+.calendar-event span { overflow: hidden; font-weight: 700; text-overflow: ellipsis; }
+.calendar-event.status-cancelled { border-left-color: #bd786e; background: #fff1ee; color: #93483e; }
+.calendar-event.status-postponed { border-left-color: #c5a25d; background: #fff8e9; color: #836629; }
+.calendar-event.status-completed { border-left-color: #82928a; background: #f0f3f1; color: #58655d; }
+.calendar-empty-day { padding: 7px 0; color: #a2aaa4; font-size: 10px; }
+.report-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.report-list { padding: 0 22px; }
+.report-row { display: flex; align-items: center; gap: 13px; min-height: 82px; padding: 13px 0; border-bottom: 1px solid #edf0ed; }
+.report-row:last-child { border-bottom: 0; }
+.report-row > div { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+.report-row strong { font-size: 12px; }
+.report-row small { color: #89938c; font-size: 11px; line-height: 1.5; }
+.notification-row { display: flex; gap: 12px; padding: 19px 0; border-bottom: 1px solid #edf0ed; }
+.notification-row:last-child { border-bottom: 0; }
+.notification-row.is-read { opacity: .7; }
+.notification-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: #43815b; }
+.notification-row.is-read .notification-dot { background: #c7cec9; }
+.notification-copy { flex: 1; min-width: 0; }
+.notification-copy > strong { font-size: 13px; }
+.notification-copy p { margin: 7px 0; color: #647167; font-size: 12px; line-height: 1.6; }
+.notification-copy small { color: #909991; font-size: 10px; }
+.notification-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 11px; }
+.notification-actions .text-button { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+@media (max-width: 1000px) { .report-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .student-history-grid { grid-template-columns: 1fr; } .visual-calendar { grid-template-columns: repeat(7, minmax(105px, 1fr)); min-width: 735px; } .table-card:has(.visual-calendar) { overflow-x: auto; } .calendar-toolbar { min-width: 735px; } .calendar-day { min-height: 100px; padding: 6px; } .report-row { align-items: flex-start; flex-wrap: wrap; } .report-row > div { min-width: calc(100% - 60px); } .report-row .secondary-action { margin-left: 48px; } }
+@media (max-width: 520px) { .student-metric-grid, .report-metrics { grid-template-columns: 1fr; } .student-list { padding: 0 15px; } .student-list-row { align-items: flex-start; } .student-credit-pill { font-size: 10px; } .calendar-nav strong { min-width: 115px; } }
+.side-link-label { flex: 1; }
+.notification-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 100px; background: #285c49; color: #fff; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
