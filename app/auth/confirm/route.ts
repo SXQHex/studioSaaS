@@ -2,27 +2,31 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const tokenHash = request.nextUrl.searchParams.get("token_hash");
-  const type = request.nextUrl.searchParams.get("type");
-
-  const resetUrl = new URL("/reset-password", request.nextUrl.origin);
-
-  if (!tokenHash || type !== "recovery") {
-    resetUrl.searchParams.set("error", "recovery");
-    return NextResponse.redirect(resetUrl);
-  }
-
+  const params = request.nextUrl.searchParams;
+  const tokenHash = params.get("token_hash");
+  const type = params.get("type");
+  const code = params.get("code");
+  const recovery = type === "recovery";
+  const destination = new URL(recovery ? "/reset-password" : "/login", request.nextUrl.origin);
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: "recovery",
-  });
 
-  if (error) {
-    resetUrl.searchParams.set("error", "recovery");
+  if (tokenHash && (type === "recovery" || type === "email" || type === "signup")) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+    if (!error) {
+      if (!recovery) destination.searchParams.set("confirmed", "true");
+      return NextResponse.redirect(destination);
+    }
+  } else if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      destination.searchParams.set("confirmed", "true");
+      return NextResponse.redirect(destination);
+    }
   }
 
-  // The SSR Supabase client persists the verified session in response cookies,
-  // so this works even if the email is opened in a different browser context.
-  return NextResponse.redirect(resetUrl);
+  destination.searchParams.set("error", recovery ? "recovery" : "confirmation");
+  return NextResponse.redirect(destination);
 }
