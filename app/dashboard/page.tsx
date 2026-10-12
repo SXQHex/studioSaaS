@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Activity,
   ArrowUpRight,
@@ -6,6 +5,7 @@ import {
   CreditCard,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { requireRole } from "@/lib/supabase/access";
 import { StudentHome } from "./_components/student-home";
 
@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   const { supabase, profile } = await requireRole(["admin", "instructor", "student"]);
 
   if (profile.role === "student") {
-    return <StudentHome />;
+    return <StudentHome supabase={supabase} profileId={profile.id} fullName={profile.fullName} />;
   }
 
   const isAdmin = profile.role === "admin";
