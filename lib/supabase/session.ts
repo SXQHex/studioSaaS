@@ -60,7 +60,7 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
     : [];
   const roles: AppRole[] = [...new Set<AppRole>(["student", ...assignments.map((r) => r.role)])];
   const active = roles.some((r) => ["appowner", "owner", "admin"].includes(r))
-    ? "admin" : roles.includes("instructor") ? "instructor" : "student";
+    ? "admin" : roles.some((r) => r === "instructor" || r === "ainstructor") ? "instructor" : "student";
   const email = authData?.claims?.email;
 
   return {
