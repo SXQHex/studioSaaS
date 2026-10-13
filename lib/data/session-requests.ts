@@ -18,17 +18,27 @@ export async function listSchedulingResources(supabase: ServerSupabase) {
     supabase.from("centers").select("id, organization_id, name, address").eq("is_active", true).order("name"),
     supabase.from("rooms").select("id, center_id, name, capacity").eq("is_active", true).order("name"),
     supabase.from("members").select("id, full_name").eq("is_active", true).order("full_name").limit(1000),
-    supabase.from("profiles").select("id, full_name").eq("role", "instructor").order("full_name"),
-    supabase.from("profiles").select("id, full_name").eq("role", "admin").order("full_name"),
+    supabase.from("center_role_assignments").select("profile_id").eq("role", "instructor"),
+    supabase.from("center_role_assignments").select("profile_id").eq("role", "admin"),
+  ]);
+  const instructorIds = [...new Set((instructors.data ?? []).map((r) => r.profile_id))];
+  const adminIds = [...new Set((admins.data ?? []).map((r) => r.profile_id))];
+  const [instructorProfiles, adminProfiles] = await Promise.all([
+    instructorIds.length
+      ? supabase.from("profiles").select("id, full_name").in("id", instructorIds).order("full_name")
+      : Promise.resolve({ data: [] as InstructorOption[], error: null }),
+    adminIds.length
+      ? supabase.from("profiles").select("id, full_name").in("id", adminIds).order("full_name")
+      : Promise.resolve({ data: [] as CenterAdminOption[], error: null }),
   ]);
   return {
     organizations: (organizations.data ?? []) as OrganizationOption[],
     centers: (centers.data ?? []) as CenterOption[],
     rooms: (rooms.data ?? []) as RoomOption[],
     members: members.data ?? [],
-    instructors: instructors.data ?? [],
-    admins: admins.data ?? [],
-    error: Boolean(organizations.error || centers.error || rooms.error || members.error || instructors.error || admins.error),
+    instructors: instructorProfiles.data ?? [],
+    admins: adminProfiles.data ?? [],
+    error: Boolean(organizations.error || centers.error || rooms.error || members.error || instructors.error || admins.error || instructorProfiles.error || adminProfiles.error),
   };
 }
 
