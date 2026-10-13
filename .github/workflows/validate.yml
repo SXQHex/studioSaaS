@@ -60,6 +60,8 @@ jobs:
           mv supabase/migrations/20261013125500_scoped_session_rpcs.sql /tmp/20261013125500_scoped_session_rpcs.sql
           mv supabase/migrations/20261013130000_role_management.sql /tmp/20261013130000_role_management.sql
           mv supabase/migrations/20261013124500_scoped_assignment_policies.sql /tmp/20261013124500_scoped_assignment_policies.sql
+          mv supabase/migrations/20261013130500_scoped_notifications.sql /tmp/20261013130500_scoped_notifications.sql
+          mv supabase/migrations/20261013131000_cross_center_student_memberships.sql /tmp/20261013131000_cross_center_student_memberships.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -100,6 +102,8 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013125000_scoped_center_rpcs.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013125500_scoped_session_rpcs.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013130000_role_management.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013130500_scoped_notifications.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013131000_cross_center_student_memberships.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_role_access.test.sql
       - name: Measure representative query plans
         shell: bash
