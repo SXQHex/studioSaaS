@@ -1,9 +1,8 @@
 import { Activity, CalendarDays, CreditCard, Wallet } from "lucide-react";
 import Link from "next/link";
+import { studioDateTime as dateTime, studioDate as dateOnly, studioTime } from "@/lib/studio-date";
 import type { ServerSupabase } from "@/lib/supabase/server";
 
-const dateTime = (value: string) => new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const dateOnly = (value: string) => new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(value));
 const reasonLabels: Record<string, string> = { purchase: "Kredi alımı", lesson_use: "Ders kullanımı", admin_adjustment: "Yönetici düzeltmesi", refund: "İade" };
 
 export async function StudentHome({ supabase, profileId, fullName }: { supabase: ServerSupabase; profileId: string; fullName: string }) {
@@ -58,7 +57,7 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
       {allSubscriptions.length ? <div className="student-list">{allSubscriptions.map((item) => <div className="student-list-row" key={item.id}><div><strong>{item.type === "group_4_weeks" ? "4 haftalık grup paketi" : "Özel ders kredi paketi"}</strong><small>{dateOnly(item.starts_on)} başlangıç{item.ends_on ? " · " + dateOnly(item.ends_on) + " bitiş" : " · Bitiş tarihi yok"} · {item.status === "active" ? "Aktif" : item.status === "expired" ? "Süresi doldu" : "İptal"} · {item.payment_status === "paid" ? "Ödendi" : item.payment_status === "refunded" ? "İade edildi" : "Ödeme bekliyor"}</small></div><span className="student-credit-pill">{item.credits_remaining} / {item.credits_purchased} kredi</span></div>)}</div> : <div className="student-empty">Hesabınıza bağlı abonelik bulunmuyor. Paket durumunuzu stüdyo yöneticisiyle kontrol edin.</div>}
     </section>
     <section className="overview-panel"><div className="panel-heading"><div><h2>Yaklaşan dersler</h2><p>Önümüzdeki planlanmış seanslar</p></div><CalendarDays className="panel-icon" size={19} /></div>
-      {upcoming.length ? <div className="student-list">{upcoming.map((lesson) => <div className="student-list-row" key={lesson.id}><div><strong>{lesson.title}</strong><small>{dateTime(lesson.starts_at)}{lesson.ends_at ? " – " + new Intl.DateTimeFormat("tr-TR", { timeStyle: "short" }).format(new Date(lesson.ends_at)) : ""}</small></div><span className="type-pill">{lesson.type === "private" ? "Özel ders" : "Grup dersi"}</span></div>)}</div> : <div className="student-empty">Yaklaşan ders kaydı bulunmuyor.</div>}
+      {upcoming.length ? <div className="student-list">{upcoming.map((lesson) => <div className="student-list-row" key={lesson.id}><div><strong>{lesson.title}</strong><small>{dateTime(lesson.starts_at)}{lesson.ends_at ? " – " + studioTime(lesson.ends_at) : ""}</small></div><span className="type-pill">{lesson.type === "private" ? "Özel ders" : "Grup dersi"}</span></div>)}</div> : <div className="student-empty">Yaklaşan ders kaydı bulunmuyor.</div>}
     </section>
     <div className="student-history-grid"><section className="overview-panel"><div className="panel-heading"><div><h2>Yoklama geçmişi</h2><p>Son katılım ve devamsızlık kayıtları</p></div><Activity className="panel-icon" size={19} /></div>
       {attendance.length ? <div className="student-list">{attendance.map((row) => <div className="student-list-row" key={row.id}><div><strong>{lessonMap.get(row.lesson_id)?.title ?? "Ders kaydı"}</strong><small>{dateTime(row.checked_in_at)}{row.notes ? " · " + row.notes : ""}</small></div><span className={row.attended ? "status-pill lesson-completed" : "status-pill lesson-cancelled"}>{row.attended ? "Katıldı" : "Devamsız"}</span></div>)}</div> : <div className="student-empty">Henüz yoklama kaydı bulunmuyor.</div>}

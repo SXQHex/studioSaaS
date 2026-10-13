@@ -22,3 +22,17 @@
 6. E-posta ile sıfırlama için geçici hesapta tek kullanımlık bağlantı, süresi geçmiş bağlantı ve yeni şifreyle giriş doğrulanır.
 
 İzole SQL, unit, build ve Playwright CI sonuçları kod/doğrulama kanıtıdır. Gerçek oturumlu tarayıcı kabulü ayrı doğrulanmadan Todo 2'nin son iki kabul maddesi kapatılmamalıdır.
+
+## Canlı kabul doğrulaması — 2026-10-13
+
+- Dört kalıcı hesabın oturumları açıldı. Öğrenci görünümünde QA üyesi, 4/4 kredi, aktif paket, bekleyen ödeme ve kayıtlı tek yaklaşan ders görüldü.
+- Eğitmen ve yönetici ders öğrenci listesinde yalnızca atanmış/yönetilen QA dersinin öğrencisini gördü. Asistan /dashboard/my-students isteğinde /dashboard'a yönlendirildi.
+- Geçici, üye/merkez kaydı olmayan QA hesabında profil adı kaydedilip sayfa yenilenerek kalıcılığı doğrulandı; giriş e-postası salt okunurdu.
+- Geçici hesapta uyuşmayan şifreler ve yanlış mevcut şifre reddedildi; doğru mevcut şifreyle değişiklik yapıldı. Auth yeni şifreyi kabul etti, eski şifreyi reddetti.
+- Geçici hesaba doğrudan eklenen Auth tek kullanımlık recovery_token fixture'ıyla canlı /confirm → /reset-password → şifre güncelleme akışı ve yeni şifreyle Auth girişi doğrulandı. Kullanılmış ve süresi dolmuş fixture bağlantıları reddedildi.
+- Fixture hesabının oturumları ve kullanıcı kaydı test sonunda silindi; kalan geçici kullanıcı sayısı 0. Kalıcı dört hesabın parolaları değiştirilmedi.
+- Giriş kabul testleri IP başına 8/15 dakika sınırına ulaştı; limiter değiştirilmedi. Şifre sonrası kimlik doğrulaması Supabase Auth üzerinden yapıldı.
+- Kabul sırasında öğrenci panelinde dersin UTC, eğitmen panelinde İstanbul saatiyle gösterildiği bulundu. Öğrenci ders başlangıç/bitiş, yoklama ve kredi hareketi zamanları Europe/Istanbul olarak düzeltildi.
+- Düzeltme için UTC ve America/Los_Angeles ortamlarında 4 saat/gün sınırı testi eklendi. Toplam 52 unit testi, TypeScript ve production build geçti. Production build üzerinde oturumlu öğrenci ekranı 19:00–20:00 gösterdi; 390px genişlikte taşma bulunmadı.
+
+**Açık kabul ölçütü:** Gerçek sıfırlama e-postasının teslimi, e-posta şablonu ve redirect allowlist bu çalışmada doğrulanmadı. Doğrudan üretilen fixture bağlantısı e-posta teslim kanıtı değildir. Todo 2'nin kodu ve oturumlu panel/şifre akışları doğrulandı; e-posta üzerinden tam uçtan uca kabul için bu son kontrol açık kalır.
