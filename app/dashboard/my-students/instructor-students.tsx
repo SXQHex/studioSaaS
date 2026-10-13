@@ -28,7 +28,7 @@ export function InstructorStudents({ lessons, selectedLesson, students, loadErro
   const router = useRouter();
   return (
     <>
-      <PageNotice loadError={loadError} loadErrorMessage="Ders veya öğrenci listesi yüklenemedi. Yetkinizi ve bağlantınızı kontrol edin." />
+      <PageNotice error="" notice="" loadError={loadError} loadErrorMessage="Ders veya öğrenci listesi yüklenemedi. Yetkinizi ve bağlantınızı kontrol edin." />
       <section className="form-card">
         <div className="form-card-heading">
           <div><h2>Ders seçimi</h2><p>Öğrenci listesi seçilen dersin kaydı, özel ders üyesi ve yoklamalarıyla sınırlandırılır.</p></div>
