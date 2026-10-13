@@ -45,8 +45,8 @@ begin
     raise exception 'cross-center enrollment integrity is not enforced';
   end if;
 
-  if not exists (select 1 from information_schema.columns
-    where table_schema='public' and table_name='profiles' and column_name='role') then
+  if not exists (select 1 from information_schema.columns col
+    where col.table_schema='public' and col.table_name='profiles' and col.column_name='role') then
     raise exception 'legacy role was removed before application cutover';
   end if;
 end;
