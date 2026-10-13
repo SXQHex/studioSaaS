@@ -47,7 +47,7 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
   const { data: scopedRows, error: rolesError } = await supabase.rpc("my_scoped_roles" as never);
   const valid = new Set<AppRole>(["appowner", "owner", "admin", "instructor", "ainstructor"]);
   const scopedRoles: AppRole[] = !rolesError && Array.isArray(scopedRows)
-    ? scopedRows.filter((row) => row && typeof row === "object" && valid.has(row.role as AppRole))
+    ? (scopedRows as unknown as Array<{ role: AppRole }>).filter((row) => row && typeof row === "object" && valid.has(row.role as AppRole))
       .map((row) => row.role as AppRole)
     : [];
   const roles = [...new Set<AppRole>(["student", ...scopedRoles])];
