@@ -17,7 +17,10 @@ import type { ReactNode } from "react";
 import { SignOutButton } from "@/app/dashboard/sign-out-button";
 
 const roleNames: Record<string, string> = {
+  appowner: "Platform yöneticisi",
+  owner: "Organizasyon sahibi",
   admin: "Yönetici",
+  ainstructor: "Asistan eğitmen",
   instructor: "Eğitmen",
   student: "Öğrenci",
 };
@@ -38,19 +41,23 @@ export function DashboardShell({
   children,
   email,
   roleLabel,
+  roles,
   unreadNotificationCount,
 }: {
   children: ReactNode;
   email: string;
   roleLabel: string;
+  roles: string[];
   unreadNotificationCount: number;
 }) {
   const pathname = usePathname();
-  const visibleNavigation = roleLabel === "admin"
-    ? navigation
-    : roleLabel === "instructor"
-      ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications"].includes(item.href))
-      : navigation.filter((item) => ["/dashboard", "/dashboard/notifications"].includes(item.href));
+  const isManager = roles.some((r) => ["appowner", "owner", "admin"].includes(r));
+  const isInstructor = roles.includes("instructor");
+  const isAssistant = roles.includes("ainstructor");
+  const visibleNavigation = isManager ? navigation
+    : isInstructor ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications"].includes(item.href))
+    : isAssistant ? navigation.filter((item) => ["/dashboard", "/dashboard/attendance", "/dashboard/notifications"].includes(item.href))
+    : navigation.filter((item) => ["/dashboard", "/dashboard/notifications"].includes(item.href));
 
   return (
     <main className="dashboard-shell">
@@ -90,7 +97,10 @@ export function DashboardShell({
         {roleLabel === "instructor" && (
           <div className="role-banner">Eğitmen erişimi: ders takvimi ve yoklama kullanılabilir; üyelik, abonelik ve kredi yönetimi yönetici rolü gerektirir.</div>
         )}
-        {![ "admin", "instructor", "student" ].includes(roleLabel) && (
+        {roleLabel === "ainstructor" && (
+          <div className="role-banner">Asistan eğitmen erişimi: yalnızca atanmış derslerde yoklama ve bildirimler kullanılabilir.</div>
+        )}
+        {![ "appowner", "owner", "admin", "instructor", "ainstructor", "student" ].includes(roleLabel) && (
           <div className="role-banner">Hesabınızın rolü doğrulanamadı. Yetkilerinizin yüklenmesi için profil kaydını kontrol edin.</div>
         )}
         {children}

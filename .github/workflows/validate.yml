@@ -50,6 +50,18 @@ jobs:
           mv supabase/migrations/20261012180000_harden_internal_function_privileges.sql /tmp/harden_internal_function_privileges.sql
           mv supabase/migrations/20261013001000_scoped_multi_role_foundation.sql /tmp/scoped_multi_role_foundation.sql
           mv supabase/migrations/20261013120000_backfill_scoped_roles.sql /tmp/backfill_scoped_roles.sql
+          mv supabase/migrations/20261013121000_role_context.sql /tmp/role_context.sql
+          mv supabase/migrations/20261013122000_scoped_rls_helpers.sql /tmp/scoped_rls_helpers.sql
+          mv supabase/migrations/20261013122500_staff_scope_integrity.sql /tmp/staff_scope_integrity.sql
+          mv supabase/migrations/20261013122700_scoped_read_helpers.sql /tmp/scoped_read_helpers.sql
+          mv supabase/migrations/20261013123000_centers_scoped_policies.sql /tmp/centers_scoped_policies.sql
+          mv supabase/migrations/20261013124000_scoped_resource_policies.sql /tmp/20261013124000_scoped_resource_policies.sql
+          mv supabase/migrations/20261013125000_scoped_center_rpcs.sql /tmp/20261013125000_scoped_center_rpcs.sql
+          mv supabase/migrations/20261013125500_scoped_session_rpcs.sql /tmp/20261013125500_scoped_session_rpcs.sql
+          mv supabase/migrations/20261013130000_role_management.sql /tmp/20261013130000_role_management.sql
+          mv supabase/migrations/20261013124500_scoped_assignment_policies.sql /tmp/20261013124500_scoped_assignment_policies.sql
+          mv supabase/migrations/20261013130500_scoped_notifications.sql /tmp/20261013130500_scoped_notifications.sql
+          mv supabase/migrations/20261013131000_cross_center_student_memberships.sql /tmp/20261013131000_cross_center_student_memberships.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -80,6 +92,20 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/scoped_multi_role_foundation.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/multi_role_foundation.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/backfill_scoped_roles.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/role_context.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/scoped_rls_helpers.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/staff_scope_integrity.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/scoped_read_helpers.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/centers_scoped_policies.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013124000_scoped_resource_policies.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013124500_scoped_assignment_policies.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013125000_scoped_center_rpcs.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013125500_scoped_session_rpcs.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013130000_role_management.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013130500_scoped_notifications.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013131000_cross_center_student_memberships.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_role_access.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_cutover_security.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |

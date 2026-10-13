@@ -1,12 +1,14 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export type AppRole = "admin" | "instructor" | "student";
+export type AppRole = "appowner" | "owner" | "admin" | "instructor" | "ainstructor" | "student";
 
 export type CurrentProfile = {
   id: string;
   fullName: string;
-  role: AppRole;
+  role: "admin" | "instructor" | "student";
+  roles: AppRole[];
+  assignments: { role: AppRole; scopeType: 'platform' | 'organization' | 'center' | 'lesson'; scopeId: string | null }[];
 };
 
 export type CurrentSession =
@@ -43,6 +45,22 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
     return { status: "no-profile", userId };
   }
 
+  const { data: scopedRows, error: rolesError } = await supabase.rpc("my_scoped_roles");
+  const permitted = new Set<AppRole>(["appowner", "owner", "admin", "instructor", "ainstructor"]);
+  const scopes = new Set(["platform", "organization", "center", "lesson"]);
+  // A role only contributes privileges if its scope is valid and authenticated.
+  const assignments = !rolesError && Array.isArray(scopedRows)
+    ? scopedRows.filter((r) => {
+      if (!r || !permitted.has(r.role as AppRole) || !scopes.has(r.scope_type)) return false;
+      if (r.scope_type === "platform") return r.role === "appowner" && r.scope_id === null;
+      if (r.scope_type === "organization") return r.role === "owner" && typeof r.scope_id === "string";
+      if (r.scope_type === "center") return ["admin", "instructor", "ainstructor"].includes(r.role) && typeof r.scope_id === "string";
+      return ["instructor", "ainstructor"].includes(r.role) && typeof r.scope_id === "string";
+    }).map((r) => ({ role: r.role as AppRole, scopeType: r.scope_type as "platform" | "organization" | "center" | "lesson", scopeId: r.scope_id }))
+    : [];
+  const roles: AppRole[] = [...new Set<AppRole>(["student", ...assignments.map((r) => r.role)])];
+  const active = roles.some((r) => ["appowner", "owner", "admin"].includes(r))
+    ? "admin" : roles.some((r) => r === "instructor" || r === "ainstructor") ? "instructor" : "student";
   const email = authData?.claims?.email;
 
   return {
@@ -52,7 +70,9 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
     profile: {
       id: profile.id,
       fullName: profile.full_name ?? "",
-      role: profile.role,
+      role: active,
+      roles,
+      assignments,
     },
   };
 });

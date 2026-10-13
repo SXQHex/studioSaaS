@@ -126,6 +126,42 @@ export type Database = {
           },
         ]
       }
+      center_role_assignments: {
+        Row: {
+          center_id: string
+          created_at: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          center_id: string
+          created_at?: string
+          profile_id: string
+          role: string
+        }
+        Update: {
+          center_id?: string
+          created_at?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "center_role_assignments_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "center_role_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       centers: {
         Row: {
           address: string | null
@@ -253,6 +289,78 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_enrollments: {
+        Row: {
+          center_id: string
+          created_at: string
+          lesson_id: string
+          member_id: string
+        }
+        Insert: {
+          center_id: string
+          created_at?: string
+          lesson_id: string
+          member_id: string
+        }
+        Update: {
+          center_id?: string
+          created_at?: string
+          lesson_id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_enrollments_lesson_id_center_id_fkey"
+            columns: ["lesson_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id", "center_id"]
+          },
+          {
+            foreignKeyName: "lesson_enrollments_member_id_center_id_fkey"
+            columns: ["member_id", "center_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "center_id"]
+          },
+        ]
+      }
+      lesson_staff_assignments: {
+        Row: {
+          created_at: string
+          lesson_id: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          lesson_id: string
+          profile_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          lesson_id?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_staff_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_staff_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -476,6 +584,42 @@ export type Database = {
           },
         ]
       }
+      organization_role_assignments: {
+        Row: {
+          created_at: string
+          organization_id: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          profile_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_role_assignments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_role_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -505,6 +649,32 @@ export type Database = {
           {
             foreignKeyName: "organizations_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_role_assignments: {
+        Row: {
+          created_at: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_role_assignments_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -802,6 +972,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      my_scoped_roles: { Args: Record<string, never>; Returns: { role: string; scope_type: string; scope_id: string | null }[] }
       create_center: {
         Args: { p_address?: string | null; p_name: string; p_organization_id: string }
         Returns: string

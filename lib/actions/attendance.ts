@@ -6,7 +6,7 @@ import { attendanceSchema } from "@/lib/validation/schemas";
 import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "./result";
 
 export async function recordAttendance(input: unknown): Promise<ActionResult> {
-  const { supabase, userId } = await requireRole(["admin", "instructor"]);
+  const { supabase, userId } = await requireRole(["admin", "instructor", "ainstructor"]);
   const { data, failure } = parseInput(attendanceSchema, input);
   if (failure) return failure;
 

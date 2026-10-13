@@ -38,12 +38,15 @@ export async function lessonStats(supabase: ServerSupabase) {
 }
 
 export async function listInstructorOptions(supabase: ServerSupabase) {
-  const { data } = await supabase
-    .from("profiles")
-    .select("id, full_name, role")
-    .in("role", ["instructor", "admin"])
-    .order("full_name");
-  return (data ?? []) as InstructorOption[];
+  const { data: assignments, error } = await supabase
+    .from("center_role_assignments")
+    .select("profile_id, role")
+    .eq("role", "instructor");
+  if (error || !assignments?.length) return [] as InstructorOption[];
+  const ids = [...new Set(assignments.map((row) => row.profile_id))];
+  const { data: profiles } = await supabase.from("profiles")
+    .select("id, full_name").in("id", ids).order("full_name");
+  return (profiles ?? []).map((p) => ({ ...p, role: "instructor" as const }));
 }
 
 /** Most recent lessons for pickers (attendance form and filters). */

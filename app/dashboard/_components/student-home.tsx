@@ -7,8 +7,11 @@ const dateOnly = (value: string) => new Intl.DateTimeFormat("tr-TR", { dateStyle
 const reasonLabels: Record<string, string> = { purchase: "Kredi alımı", lesson_use: "Ders kullanımı", admin_adjustment: "Yönetici düzeltmesi", refund: "İade" };
 
 export async function StudentHome({ supabase, profileId, fullName }: { supabase: ServerSupabase; profileId: string; fullName: string }) {
-  const memberResult = await supabase.from("members").select("id, full_name, is_active, center_id").eq("profile_id", profileId).maybeSingle();
-  const member = memberResult.data;
+  const memberResult = await supabase.from("members").select("id, full_name, is_active, center_id").eq("profile_id", profileId).order("created_at");
+  const linkedMembers = memberResult.data ?? [];
+  const member = linkedMembers[0];
+  const linkedIds = linkedMembers.map((m) => m.id);
+  const linkedCenters = [...new Set(linkedMembers.map((m) => m.center_id))];
   if (!member) {
     return <div className="dashboard-content"><div className="welcome-row"><div><p className="eyebrow">ÖĞRENCİ HESABI</p><h1>Hoş geldiniz{fullName ? ", " + fullName : ""}</h1><p className="dashboard-subtitle">Hesabınız henüz bir üye kaydıyla eşleştirilmemiş.</p></div><span className="today-pill">FTK Studio</span></div><section className="overview-panel"><div className="panel-heading"><div><h2>Üyelik eşleştirmesi gerekiyor</h2><p>Abonelik, kredi ve ders bilgilerinizi gösterebilmemiz için stüdyo yöneticisinin üye kaydınızı bu giriş hesabına bağlaması gerekiyor.</p></div></div></section></div>;
   }
@@ -16,15 +19,15 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
   const now = new Date().toISOString();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const [subscriptionsResult, attendanceResult, creditsResult] = await Promise.all([
-    supabase.from("subscriptions").select("id, type, status, starts_on, ends_on, credits_purchased, credits_remaining, payment_status").eq("member_id", member.id).eq("status", "active").lte("starts_on", today).or("ends_on.is.null,ends_on.gte." + today).order("starts_on", { ascending: false }),
-    supabase.from("attendance").select("id, lesson_id, attended, checked_in_at, notes").eq("member_id", member.id).order("checked_in_at", { ascending: false }).limit(12),
-    supabase.from("credit_transactions").select("id, amount, reason, note, created_at, lesson_id").eq("member_id", member.id).order("created_at", { ascending: false }).limit(12),
+    supabase.from("subscriptions").select("id, type, status, starts_on, ends_on, credits_purchased, credits_remaining, payment_status").in("member_id", linkedIds).eq("status", "active").lte("starts_on", today).or("ends_on.is.null,ends_on.gte." + today).order("starts_on", { ascending: false }),
+    supabase.from("attendance").select("id, lesson_id, attended, checked_in_at, notes").in("member_id", linkedIds).order("checked_in_at", { ascending: false }).limit(12),
+    supabase.from("credit_transactions").select("id, amount, reason, note, created_at, lesson_id").in("member_id", linkedIds).order("created_at", { ascending: false }).limit(12),
   ]);
   const attendance = attendanceResult.data ?? [];
   const lessonIds = [...new Set(attendance.map((row) => row.lesson_id))];
   const [upcomingPrivate, upcomingGroup, historyLessons] = await Promise.all([
-    supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").eq("private_member_id", member.id).eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8),
-    supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").eq("center_id", member.center_id).eq("type", "group").eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8),
+    supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").in("private_member_id", linkedIds).eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8),
+    supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").in("center_id", linkedCenters).eq("type", "group").eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8),
     lessonIds.length ? supabase.from("lessons").select("id, title, starts_at, status").in("id", lessonIds) : Promise.resolve({ data: [], error: null }),
   ]);
   const upcomingMap = new Map<string, { id: string; title: string; starts_at: string; ends_at: string | null; status: string; type: string }>();
