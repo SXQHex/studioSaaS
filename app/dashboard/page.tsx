@@ -20,7 +20,8 @@ export default async function DashboardPage() {
     return <StudentHome supabase={supabase} profileId={profile.id} fullName={profile.fullName} />;
   }
 
-  const isAdmin = profile.role === "admin";
+  const isAdmin = profile.roles.some((r) => ["appowner", "owner", "admin"].includes(r));
+  const isAssistantOnly = !isAdmin && !profile.roles.includes("instructor");
   const [lessonsResult, upcomingResult, membersResult, subscriptionsResult, attendanceResult] = await Promise.all([
     supabase.from("lessons").select("id", { count: "exact", head: true }),
     supabase.from("lessons").select("id", { count: "exact", head: true }).eq("status", "scheduled").gte("starts_at", new Date().toISOString()),
@@ -54,11 +55,14 @@ export default async function DashboardPage() {
         { label: "Yoklama", description: "Ders katılım kayıtlarını görüntüle veya kaydet", icon: Activity, href: "/dashboard/attendance" },
       ];
 
+  const availableModules = isAssistantOnly ? modules.filter((item) => item.href === "/dashboard/attendance") : modules;
+  const availableMetrics = isAssistantOnly ? metrics.filter((item) => item.href === "/dashboard/attendance") : metrics;
+
   return (
     <div className="dashboard-content">
       <div className="welcome-row">
         <div>
-          <p className="eyebrow">{isAdmin ? "STÜDYO ÖZETİ" : "EĞİTMEN ÖZETİ"}</p>
+          <p className="eyebrow">{isAdmin ? "STÜDYO ÖZETİ" : isAssistantOnly ? "ASİSTAN EĞİTMEN ÖZETİ" : "EĞİTMEN ÖZETİ"}</p>
           <h1>Genel bakış</h1>
           <p className="dashboard-subtitle">
             {isAdmin ? "Stüdyonun günlük akışı ve temel kayıtları." : "Ders programı ve yoklama kayıtları."}
@@ -68,7 +72,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="metric-grid">
-        {metrics.map((metric) => {
+        {availableMetrics.map((metric) => {
           const Icon = metric.icon;
           return (
             <Link className="metric-card metric-card-link" href={metric.href} key={metric.label}>
@@ -89,7 +93,7 @@ export default async function DashboardPage() {
           </div>
         </div>
         <div className="module-grid">
-          {modules.map((module) => {
+          {availableModules.map((module) => {
             const Icon = module.icon;
             return (
               <Link className="module-card" href={module.href} key={module.href}>
