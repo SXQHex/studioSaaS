@@ -29,7 +29,7 @@ The application remains on its existing Vercel deployment, connected to SXQHex/s
 
 The earlier 2026-10-12 inventory is historical. Scoped role/member-account/panel/request migrations are applied. Recovery adds the group, collection, lifecycle, reminder, CRM, report and waitlist schema. See [recovery-database-rollout.md](recovery-database-rollout.md). The reminder cron is active every 15 minutes; actual scheduled delivery remains an acceptance check.
 
-Remaining advisor review: btree_gist is in public; public SECURITY DEFINER RPCs use explicit scoped checks and restricted grants; studio_policies intentionally has no direct client access and is served by scoped RPCs. Leaked-password protection is disabled and requires Auth configuration access, which is not exposed by the current connector. No claim is made that these dashboard settings were changed.
+Remaining advisor review: btree_gist is in public; public SECURITY DEFINER RPCs use explicit scoped checks and restricted grants; studio_policies intentionally has no direct client access and is served by scoped RPCs. The project uses Supabase Free, which does not support enabling leaked-password protection. This plan limitation is not an open issue or release blocker. No claim is made that these dashboard settings were changed.
 
 ## Center-isolation acceptance tests
 

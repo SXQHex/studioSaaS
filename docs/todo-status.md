@@ -5,6 +5,8 @@ Son gözden geçirme: 14.10.2026 — recovery/studiosaas-pr13 kodu ve canlı Sup
 Kod/izole test/canlı şema kontrolü, gerçek kullanıcı kabulü yerine geçmez.
 Mevcut GitHub deposu, Supabase backend ve Vercel dağıtım düzeni korunur.
 
+**Plan kısıtı:** Supabase projesi Free plandadır. Auth sızdırılmış parola koruması bu planda etkinleştirilemez. Bu durum hata, açık sorun veya geliştirmelerin tamamlanmasını engelleyen bir kabul ölçütü olarak listelenmez.
+
 | Sıra | Geliştirme | Geliştirme / canlı DB | Kabul |
 |---|---|---|---|
 | 1 | Kullanıcı, rol ve erişim | Uygulandı | Gerçek oturumlu son UI kontrolü açık |
@@ -116,7 +118,6 @@ Mevcut GitHub deposu, Supabase backend ve Vercel dağıtım düzeni korunur.
 - [x] Recovery dalı push işlemlerinde CI çalışacak şekilde düzeltildi.
 - [x] Eski Netlify ve yetkilendirme belgeleri mevcut Vercel/scoped role düzenine göre güncellendi.
 - [ ] Recovery değişikliklerinin üretim dalına alınması ve mevcut Vercel dağıtımında kabul.
-- [ ] Supabase Auth sızdırılmış parola koruması: kapalı; mevcut bağlantıda bu ayarı değiştiren işlem bulunmuyor.
 - [ ] Advisor bakım maddeleri: public btree_gist ve tarihsel indeksler. Kullanılmayan indeksler otomatik silinmedi.
 
 owner@ftk.com, admin@ftk.com, instructor@ftk.com, asist@ftk.com ve QA - Asistan Öğrenci korunur. Parolalar değiştirilmez veya dosyaya yazılmaz.

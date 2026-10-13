@@ -21,4 +21,4 @@ Verification after rollout: all nine new public tables exist with RLS; consume_l
 
 The clean isolated PostgreSQL contracts cover partial collections, refunds/reversals, participant-only credit use, absence and cancellation, makeup/reschedule, reminders and end-only changes, CRM role isolation, 1,003-row reports and waitlist capacity. CI repeats the full chain on Supabase PostgreSQL 17.
 
-Real-session UI acceptance and email delivery remain deferred. Auth leaked-password protection cannot be changed through the currently exposed connector; review it in Authentication settings. SECURITY DEFINER RPCs retain scoped checks; btree_gist remains in public because its historical exclusion constraints are tied to the current schema.
+Real-session UI acceptance and email delivery remain deferred. The project uses Supabase Free, which does not support enabling Auth leaked-password protection. This plan limitation is not an open issue or acceptance blocker. SECURITY DEFINER RPCs retain scoped checks; btree_gist remains in public because its historical exclusion constraints are tied to the current schema.
