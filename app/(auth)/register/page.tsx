@@ -44,7 +44,7 @@ export default function RegisterPage() {
         email: email.trim().toLowerCase(),
         password,
         options: {
-          emailRedirectTo: `${redirectOrigin}/auth/confirm`,
+          emailRedirectTo: `${redirectOrigin}/confirm`,
           data: { full_name: name },
         },
       });

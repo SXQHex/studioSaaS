@@ -8,9 +8,13 @@ RBAC determines allowed operations; ABAC evaluates attributes such as organizati
 
 ## Public registration
 
-- `/register` uses Supabase Auth `signUp`, collects full name, email and password, and sends an email confirmation link to `/auth/confirm`.
+- `/register` uses Supabase Auth `signUp`, collects full name, email and password, and sends an email confirmation link to `/confirm`.
 - The existing trusted `app_private.handle_new_user` trigger creates a `profiles` row with `student` role. Neither a user-chosen role nor center membership is assigned at registration.
-- `/login` links to `/register`. `/auth/confirm` supports both the email-signup callback and existing recovery verification.
-- Configure Supabase Authentication: enable email signups and email confirmation; add `https://uye.fethiyetango.com/auth/confirm` and (only for local testing) `http://localhost:3000/auth/confirm` to the redirect URL allowlist. Configure and test SMTP delivery before public launch.
+- `/login` links to `/register`. `/confirm` supports both the email-signup callback and existing recovery verification.
+- Configure Supabase Authentication: enable email signups and email confirmation; add `https://uye.fethiyetango.com/confirm` and (only for local testing) `http://localhost:3000/confirm` to the redirect URL allowlist. Configure and test SMTP delivery before public launch.
 - Supabase's built-in Auth sign-up rate limits apply; configure CAPTCHA and stricter public abuse protection before opening signups at scale. Confirm whether public self-registration is allowed for the organization.
 - Check registration/confirmation end-to-end on the deployed domain with a disposable email. Browser-only CI tests verify form validation and accessibility but cannot verify real email delivery without an Auth test environment.
+
+## Next.js authentication route group
+
+Authentication pages live in `app/(auth)/login`, `app/(auth)/register`, and `app/(auth)/reset-password`. The confirmation handler lives in `app/(auth)/confirm/route.ts`. The `(auth)` segment is a Next.js route group and does not appear in public URLs; existing `/login`, `/register`, `/reset-password`, and `/confirm` paths remain unchanged. `/reset-password` displays the password form, while `/confirm` verifies emailed tokens and redirects to the appropriate page. The login API remains `/api/auth/login`.
