@@ -165,4 +165,22 @@ if (select status from public.group_waitlist where group_id=g and member_id='b40
 end;$$;
 reset role;
 
+set local role authenticated;
+do $$declare refund_id uuid;r jsonb;key uuid:=gen_random_uuid();denied boolean;
+begin
+perform set_config('request.jwt.claim.sub','b1000000-0000-4000-8000-000000000004',true);
+perform public.lesson_command(jsonb_build_object('action','student_cancel','lesson_id','b5000000-0000-4000-8000-000000000005','member_id','b4000000-0000-4000-8000-000000000001','note','Geç iptal'));
+if (select status from public.lessons where id='b5000000-0000-4000-8000-000000000005')<>'cancelled'
+or exists(select 1 from public.credit_transactions where lesson_id='b5000000-0000-4000-8000-000000000005' and reason='refund') then raise exception 'Private late cancellation failed to release room/retain penalty';end if;
+if (select credits_remaining from public.subscriptions where id='b7000000-0000-4000-8000-000000000001')<>3 then raise exception 'Late cancellation credit missing';end if;
+perform set_config('request.jwt.claim.sub','b1000000-0000-4000-8000-000000000001',true);
+select id into refund_id from public.manual_payments where subscription_id='b7000000-0000-4000-8000-000000000001' and kind='refund';
+perform public.payments_command(jsonb_build_object('action','reverse','subscription_id','b7000000-0000-4000-8000-000000000001','entry_id',refund_id,'key',key,'occurred_at',now(),'note','İade düzeltmesi'));
+perform public.payments_command(jsonb_build_object('action','reverse','subscription_id','b7000000-0000-4000-8000-000000000001','entry_id',refund_id,'key',key,'occurred_at',now(),'note','İade düzeltmesi'));
+if (select count(*) from public.manual_payments where reversed_entry_id=refund_id)<>1 then raise exception 'Duplicate reversal';end if;
+denied:=false;begin perform public.payments_command(jsonb_build_object('action','reverse','subscription_id','b7000000-0000-4000-8000-000000000001','entry_id',refund_id,'key',gen_random_uuid(),'occurred_at',now(),'note','İkinci ters kayıt'));exception when unique_violation then denied:=true;end;
+if not denied then raise exception 'Same receipt reversed twice';end if;
+end;$$;
+reset role;
+
 rollback;
