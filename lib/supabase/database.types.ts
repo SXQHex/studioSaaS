@@ -469,6 +469,36 @@ export type Database = {
           },
         ]
       }
+      member_account_link_audit: {
+        Row: {
+          id: string
+          member_id: string
+          center_id: string
+          old_profile_id: string | null
+          new_profile_id: string | null
+          actor_id: string
+          changed_at: string
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          center_id: string
+          old_profile_id?: string | null
+          new_profile_id?: string | null
+          actor_id: string
+          changed_at?: string
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          center_id?: string
+          old_profile_id?: string | null
+          new_profile_id?: string | null
+          actor_id?: string
+          changed_at?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           center_id: string
@@ -972,6 +1002,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      lookup_center_account: {
+        Args: { p_center_id: string; p_email: string }
+        Returns: { profile_id: string; email: string; full_name: string; linked_member_id: string | null }[]
+      }
+      link_member_account: {
+        Args: { p_member_id: string; p_account_email: string }
+        Returns: string
+      }
+      unlink_member_account: {
+        Args: { p_member_id: string }
+        Returns: undefined
+      }
+      assign_center_role: {
+        Args: { p_center_id: string; p_profile_id: string; p_role: string }
+        Returns: undefined
+      }
+      remove_center_role: {
+        Args: { p_center_id: string; p_profile_id: string; p_role: string }
+        Returns: undefined
+      }
+
       my_scoped_roles: { Args: Record<string, never>; Returns: { role: string; scope_type: string; scope_id: string | null }[] }
       create_center: {
         Args: { p_address?: string | null; p_name: string; p_organization_id: string }
