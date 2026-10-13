@@ -9,11 +9,13 @@ const MEMBER_COLUMNS = "id, center_id, full_name, phone, email, notes, is_active
 /** Upper bound for dropdown option lists; larger studios should switch to a searchable picker. */
 export const OPTION_LIMIT = 1000;
 
-export async function listMembers(supabase: ServerSupabase, { q, page }: { q: string; page: number }) {
+export async function listMembers(supabase: ServerSupabase, { q, page, centerIds }: { q: string; page: number; centerIds: string[] }) {
+  if (!centerIds.length) return { rows: [] as MemberRow[], total: 0, error: false };
   const [from, to] = pageRange(page);
   let query = supabase
     .from("members")
     .select(MEMBER_COLUMNS, { count: "exact" })
+    .in("center_id", centerIds)
     .order("created_at", { ascending: false })
     .range(from, to);
   if (q) query = query.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`);
@@ -22,10 +24,11 @@ export async function listMembers(supabase: ServerSupabase, { q, page }: { q: st
   return { rows: (data ?? []) as MemberRow[], total: count ?? 0, error: Boolean(error) };
 }
 
-export async function memberStats(supabase: ServerSupabase) {
+export async function memberStats(supabase: ServerSupabase, centerIds: string[]) {
+  if (!centerIds.length) return { total: 0, active: 0, inactive: 0, error: false };
   const [all, active] = await Promise.all([
-    supabase.from("members").select("id", { count: "exact", head: true }),
-    supabase.from("members").select("id", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("members").select("id", { count: "exact", head: true }).in("center_id", centerIds),
+    supabase.from("members").select("id", { count: "exact", head: true }).in("center_id", centerIds).eq("is_active", true),
   ]);
   const total = all.count ?? 0;
   const activeCount = active.count ?? 0;
