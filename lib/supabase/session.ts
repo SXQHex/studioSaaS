@@ -1,12 +1,13 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export type AppRole = "admin" | "instructor" | "student";
+export type AppRole = "appowner" | "owner" | "admin" | "instructor" | "ainstructor" | "student";
 
 export type CurrentProfile = {
   id: string;
   fullName: string;
-  role: AppRole;
+  role: "admin" | "instructor" | "student";
+  roles: AppRole[];
 };
 
 export type CurrentSession =
@@ -43,6 +44,16 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
     return { status: "no-profile", userId };
   }
 
+  const { data: scopedRows, error: rolesError } = await supabase.rpc("my_scoped_roles" as never);
+  const valid = new Set<AppRole>(["appowner", "owner", "admin", "instructor", "ainstructor"]);
+  const scopedRoles: AppRole[] = !rolesError && Array.isArray(scopedRows)
+    ? scopedRows.filter((row) => row && typeof row === "object" && valid.has(row.role as AppRole))
+      .map((row) => row.role as AppRole)
+    : [];
+  const roles = [...new Set<AppRole>(["student", ...scopedRoles])];
+  const active = roles.some((role) => ["appowner", "owner", "admin"].includes(role))
+    ? "admin" : roles.some((role) => ["instructor", "ainstructor"].includes(role))
+      ? "instructor" : "student";
   const email = authData?.claims?.email;
 
   return {
@@ -52,7 +63,8 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
     profile: {
       id: profile.id,
       fullName: profile.full_name ?? "",
-      role: profile.role,
+      role: active,
+      roles,
     },
   };
 });
