@@ -1,7 +1,9 @@
 create or replace function public.my_scoped_roles()
 returns table(role text, scope_type text, scope_id uuid)
-language sql stable security invoker set search_path to ''
-as $$
+language plpgsql stable security invoker set search_path to ''
+as $
+begin
+ return query
  select p.role, 'platform'::text, null::uuid
  from public.platform_role_assignments p where p.profile_id=(select auth.uid())
  union all
@@ -12,7 +14,8 @@ as $$
  from public.center_role_assignments c where c.profile_id=(select auth.uid())
  union all
  select l.role, 'lesson'::text, l.lesson_id
- from public.lesson_staff_assignments l where l.profile_id=(select auth.uid())
-$$;
+ from public.lesson_staff_assignments l where l.profile_id=(select auth.uid());
+end
+$;
 revoke all on function public.my_scoped_roles() from public,anon;
 grant execute on function public.my_scoped_roles() to authenticated;
