@@ -55,6 +55,10 @@ jobs:
           mv supabase/migrations/20261013122500_staff_scope_integrity.sql /tmp/staff_scope_integrity.sql
           mv supabase/migrations/20261013122700_scoped_read_helpers.sql /tmp/scoped_read_helpers.sql
           mv supabase/migrations/20261013123000_centers_scoped_policies.sql /tmp/centers_scoped_policies.sql
+          mv supabase/migrations/20261013124000_scoped_resource_policies.sql /tmp/20261013124000_scoped_resource_policies.sql
+          mv supabase/migrations/20261013125000_scoped_center_rpcs.sql /tmp/20261013125000_scoped_center_rpcs.sql
+          mv supabase/migrations/20261013125500_scoped_session_rpcs.sql /tmp/20261013125500_scoped_session_rpcs.sql
+          mv supabase/migrations/20261013130000_role_management.sql /tmp/20261013130000_role_management.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -90,6 +94,10 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/staff_scope_integrity.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/scoped_read_helpers.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/centers_scoped_policies.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013124000_scoped_resource_policies.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013125000_scoped_center_rpcs.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013125500_scoped_session_rpcs.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013130000_role_management.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_role_access.test.sql
       - name: Measure representative query plans
         shell: bash
