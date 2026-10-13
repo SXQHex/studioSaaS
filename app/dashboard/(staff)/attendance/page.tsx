@@ -9,7 +9,7 @@ import { AttendanceManager } from "./attendance-manager";
 export const metadata = { title: "Yoklama | FTK Studio" };
 
 export default async function AttendancePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase } = await requireRole(["admin", "instructor"]);
+  const { supabase } = await requireRole(["admin", "instructor", "ainstructor"]);
   const params = await searchParams;
   const q = sanitizeSearchTerm(params.q);
   const lessonId = pickUuid(params.lesson);
