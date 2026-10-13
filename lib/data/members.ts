@@ -2,10 +2,10 @@ import type { ServerSupabase } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/database.types";
 import { pageRange } from "./pagination";
 
-export type MemberRow = Pick<Tables<"members">, "id" | "center_id" | "full_name" | "phone" | "email" | "notes" | "is_active" | "created_at">;
+export type MemberRow = Pick<Tables<"members">, "id" | "center_id" | "full_name" | "phone" | "email" | "notes" | "is_active" | "created_at" | "profile_id">;
 export type MemberOption = Pick<Tables<"members">, "id" | "full_name" | "is_active">;
 
-const MEMBER_COLUMNS = "id, center_id, full_name, phone, email, notes, is_active, created_at";
+const MEMBER_COLUMNS = "id, center_id, full_name, phone, email, notes, is_active, created_at, profile_id";
 /** Upper bound for dropdown option lists; larger studios should switch to a searchable picker. */
 export const OPTION_LIMIT = 1000;
 
