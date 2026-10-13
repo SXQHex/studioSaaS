@@ -87,7 +87,7 @@ drop policy if exists subscriptions_read_own_or_assigned_session on public.subsc
 create policy subscriptions_scoped_read on public.subscriptions for select to authenticated
  using (app_private.can_manage_center(center_id)
  or exists(select 1 from public.members m where m.id=member_id and m.profile_id=(select auth.uid()))
- or app_private.instructor_can_access_member_center(center_id,member_id));
+ or (app_private.has_center_role(center_id,'instructor') and app_private.instructor_can_access_member_center(center_id,member_id)));
 create policy subscriptions_manager_insert on public.subscriptions for insert to authenticated
  with check (app_private.can_manage_center(center_id));
 create policy subscriptions_manager_update on public.subscriptions for update to authenticated
@@ -100,7 +100,7 @@ drop policy if exists credit_transactions_read_center_or_own on public.credit_tr
 create policy credit_transactions_scoped_read on public.credit_transactions for select to authenticated
  using (app_private.can_manage_center(center_id)
  or exists(select 1 from public.members m where m.id=member_id and m.profile_id=(select auth.uid()))
- or (lesson_id is not null and app_private.is_assigned_staff(lesson_id)));
+ or (lesson_id is not null and app_private.has_center_role(center_id,'instructor') and app_private.is_assigned_staff(lesson_id)));
 create policy credit_transactions_manager_insert on public.credit_transactions for insert to authenticated
  with check (app_private.can_manage_center(center_id)
  and reason in ('admin_adjustment','refund')
