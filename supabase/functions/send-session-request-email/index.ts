@@ -63,58 +63,47 @@ Deno.serve(async (request: Request) => {
   const user = authData.user;
   if (authError || !user) return json({ ok: false, error: "unauthorized" }, 401);
 
-  const [{ data: profile, error: profileError }, { data: sessionRequest, error: requestError }] =
-    await Promise.all([
-      supabase.from("profiles").select("id, role, full_name").eq("id", user.id).maybeSingle(),
-      supabase
-        .from("session_requests")
-        .select("id, organization_id, center_id, requested_by, instructor_id, title, starts_at, ends_at, status, reviewed_by, review_note")
-        .eq("id", requestId)
-        .maybeSingle(),
-    ]);
-  if (profileError || requestError || !profile || !sessionRequest) {
-    return json({ ok: false, error: "request_not_found" }, 404);
-  }
-
+  const { data: sessionRequest, error: requestError } = await supabase
+    .from("session_requests")
+    .select("id, organization_id, center_id, requested_by, instructor_id, title, starts_at, ends_at, status, reviewed_by, review_note")
+    .eq("id", requestId).maybeSingle();
+  if (requestError || !sessionRequest) return json({ ok: false, error: "request_not_found" }, 404);
   const row = sessionRequest as SessionRequest;
+  const [centerRoles, ownerRoles, platformRoles] = await Promise.all([
+    supabase.from("center_role_assignments").select("profile_id,role").eq("center_id",row.center_id),
+    supabase.from("organization_role_assignments").select("profile_id,role").eq("organization_id",row.organization_id),
+    supabase.from("platform_role_assignments").select("profile_id,role").eq("role","appowner"),
+  ]);
+  if (centerRoles.error || ownerRoles.error || platformRoles.error) {
+    return json({ ok: false, error: "role_lookup_failed" }, 503);
+  }
+  const centerAssignments = centerRoles.data ?? [];
+  const orgAssignments = ownerRoles.data ?? [];
+  const platformAssignments = platformRoles.data ?? [];
+  const managerIds = [...new Set([
+    ...centerAssignments.filter((r) => r.role === "admin").map((r) => r.profile_id),
+    ...orgAssignments.filter((r) => r.role === "owner").map((r) => r.profile_id),
+    ...platformAssignments.map((r) => r.profile_id),
+  ])];
+  const canManage = managerIds.includes(user.id);
+  const isInstructor = centerAssignments.some((r) => r.profile_id === user.id && r.role === "instructor");
   let recipientIds: string[] = [];
-
   if (event === "created") {
-    if (row.requested_by !== user.id || !["admin", "instructor"].includes(profile.role)) {
+    if (row.requested_by !== user.id || (!canManage && !isInstructor)) {
       return json({ ok: false, error: "forbidden" }, 403);
     }
     if (row.status !== "pending") return json({ ok: false, error: "request_not_pending" }, 409);
-
-    if (profile.role === "admin") {
-      const { data: centerAdmin, error } = await supabase
-        .from("center_admins")
-        .select("profile_id")
-        .eq("center_id", row.center_id)
-        .eq("profile_id", user.id)
-        .maybeSingle();
-      if (error || !centerAdmin) return json({ ok: false, error: "forbidden" }, 403);
+    if (canManage) {
       recipientIds = [row.instructor_id];
     } else {
       if (row.instructor_id !== user.id) return json({ ok: false, error: "forbidden" }, 403);
-      const { data: centerAdmins, error } = await supabase
-        .from("center_admins")
-        .select("profile_id")
-        .eq("center_id", row.center_id);
-      if (error) return json({ ok: false, error: "recipients_unavailable" }, 500);
-      recipientIds = (centerAdmins ?? []).map((item) => item.profile_id);
+      recipientIds = managerIds.filter((id) => id !== user.id);
     }
   } else {
-    const expectedStatus = event === "approved" ? "approved" : "rejected";
-    if (profile.role !== "admin" || row.status !== expectedStatus || row.reviewed_by !== user.id) {
+    const expected = event === "approved" ? "approved" : "rejected";
+    if (!canManage || row.status !== expected || row.reviewed_by !== user.id) {
       return json({ ok: false, error: "forbidden_or_unreviewed" }, 403);
     }
-    const { data: centerAdmin, error } = await supabase
-      .from("center_admins")
-      .select("profile_id")
-      .eq("center_id", row.center_id)
-      .eq("profile_id", user.id)
-      .maybeSingle();
-    if (error || !centerAdmin) return json({ ok: false, error: "forbidden" }, 403);
     recipientIds = [row.requested_by, row.instructor_id];
   }
 
@@ -145,7 +134,7 @@ Deno.serve(async (request: Request) => {
         : "Seans talebiniz reddedildi";
   const from = Deno.env.get("RESEND_FROM_EMAIL") || "FTK Studio <bildirim@fethiyetango.com>";
   const textFor = () => {
-    if (event === "created" && profile.role === "admin") {
+    if (event === "created" && canManage) {
       return "Size bir seans planlama talebi gönderildi.\n\nDers: " + row.title +
         "\nMerkez: " + (center?.name ?? "Merkez") + "\nTarih: " + date +
         "\n\nTalebi incelemek için FTK Studio paneline giriş yapın.";
