@@ -105,6 +105,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013130500_scoped_notifications.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013131000_cross_center_student_memberships.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_role_access.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_cutover_security.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |
