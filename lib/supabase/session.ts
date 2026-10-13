@@ -8,6 +8,7 @@ export type CurrentProfile = {
   fullName: string;
   role: "admin" | "instructor" | "student";
   roles: AppRole[];
+  assignments: { role: AppRole; scopeType: 'platform' | 'organization' | 'center' | 'lesson'; scopeId: string | null }[];
 };
 
 export type CurrentSession =
@@ -44,16 +45,22 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
     return { status: "no-profile", userId };
   }
 
-  const { data: scopedRows, error: rolesError } = await supabase.rpc("my_scoped_roles" as never);
-  const valid = new Set<AppRole>(["appowner", "owner", "admin", "instructor", "ainstructor"]);
-  const scopedRoles: AppRole[] = !rolesError && Array.isArray(scopedRows)
-    ? (scopedRows as unknown as Array<{ role: AppRole }>).filter((row) => row && typeof row === "object" && valid.has(row.role as AppRole))
-      .map((row) => row.role as AppRole)
+  const { data: scopedRows, error: rolesError } = await supabase.rpc("my_scoped_roles");
+  const permitted = new Set<AppRole>(["appowner", "owner", "admin", "instructor", "ainstructor"]);
+  const scopes = new Set(["platform", "organization", "center", "lesson"]);
+  // A role only contributes privileges if its scope is valid and authenticated.
+  const assignments = !rolesError && Array.isArray(scopedRows)
+    ? scopedRows.filter((r) => {
+      if (!r || !permitted.has(r.role as AppRole) || !scopes.has(r.scope_type)) return false;
+      if (r.scope_type === "platform") return r.role === "appowner" && r.scope_id === null;
+      if (r.scope_type === "organization") return r.role === "owner" && typeof r.scope_id === "string";
+      if (r.scope_type === "center") return ["admin", "instructor", "ainstructor"].includes(r.role) && typeof r.scope_id === "string";
+      return ["instructor", "ainstructor"].includes(r.role) && typeof r.scope_id === "string";
+    }).map((r) => ({ role: r.role as AppRole, scopeType: r.scope_type as "platform" | "organization" | "center" | "lesson", scopeId: r.scope_id }))
     : [];
-  const roles = [...new Set<AppRole>(["student", ...scopedRoles])];
-  const active = roles.some((role) => ["appowner", "owner", "admin"].includes(role))
-    ? "admin" : roles.some((role) => ["instructor", "ainstructor"].includes(role))
-      ? "instructor" : "student";
+  const roles: AppRole[] = [...new Set<AppRole>(["student", ...assignments.map((r) => r.role)])];
+  const active = roles.some((r) => ["appowner", "owner", "admin"].includes(r))
+    ? "admin" : roles.includes("instructor") ? "instructor" : "student";
   const email = authData?.claims?.email;
 
   return {
@@ -65,6 +72,7 @@ export const getSession = cache(async (): Promise<CurrentSession> => {
       fullName: profile.full_name ?? "",
       role: active,
       roles,
+      assignments,
     },
   };
 });
