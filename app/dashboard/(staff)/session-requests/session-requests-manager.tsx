@@ -2,27 +2,25 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, CalendarClock, Check, DoorOpen, Plus, X } from "lucide-react";
+import { studioDateTime, studioInputToIso } from "@/lib/studio-date";
+import { RequestWorkflowControls, RequestHistory } from "./request-workflow-controls";
+import { Building2, CalendarClock, DoorOpen, Plus } from "lucide-react";
 import { PageNotice } from "@/components/page-notice";
 import { useActionRunner } from "@/components/use-action-runner";
 import {
-  createCenter, createGroupProposal, createOrganization, createRoom, createSessionRequest, grantCenterAdmin, listRequestableMembers, revokeCenterAdmin, reviewSessionRequest,
+  createCenter, createGroupProposal, createOrganization, createRoom, createSessionRequest, grantCenterAdmin, listRequestableMembers, revokeCenterAdmin,
 } from "@/lib/actions/session-requests";
 import type { CenterAdminOption, CenterOption, InstructorOption, OrganizationOption, RoomOption, SessionRequestRow } from "@/lib/data/session-requests";
 
-function toIso(value: string) {
-  const date = new Date(value);
-  return value && !Number.isNaN(date.getTime()) ? date.toISOString() : "";
-}
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-}
-const statusText: Record<string, string> = { pending: "Onay bekliyor", approved: "Onaylandı", rejected: "Reddedildi", cancelled: "İptal" };
+const toIso = studioInputToIso;
+const formatTime = studioDateTime;
+const statusText: Record<string, string> = { pending: "Onay bekliyor", approved: "Onaylandı", rejected: "Reddedildi", cancelled: "Geri çekildi" };
 
 export function SessionRequestsManager({
-  isAdmin, organizations, centers, rooms, admins, instructors, requests, loadError,
+  isAdmin, currentUserId, organizations, centers, rooms, admins, instructors, requests, loadError,
 }: {
   isAdmin: boolean;
+  currentUserId: string;
   organizations: OrganizationOption[];
   centers: CenterOption[];
   rooms: RoomOption[];
@@ -52,7 +50,6 @@ export function SessionRequestsManager({
   const [endsAt, setEndsAt] = useState("");
   const [attendees, setAttendees] = useState(isAdmin ? "20" : "1");
   const [notes, setNotes] = useState("");
-  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const { busy, error, notice, setError, reset, run } = useActionRunner();
 
   useEffect(() => {
@@ -128,10 +125,6 @@ export function SessionRequestsManager({
       },
     });
   }
-  async function review(id: string, approve: boolean) {
-    if (approve && !window.confirm("Talep onaylanacak. Oda ve eğitmen uygunluğu veritabanında yeniden kontrol edilecek. Devam edilsin mi?")) return;
-    await run(() => reviewSessionRequest({ id, approve, note: reviewNotes[id] || null }), { rowId: id });
-  }
 
   return (
     <div className="dashboard-content">
@@ -139,7 +132,7 @@ export function SessionRequestsManager({
         <div><p className="eyebrow">SEANS PLANLAMA</p><h1>Seans talepleri ve odalar</h1><p className="dashboard-subtitle">Bekleyen talepler oda rezervasyonu oluşturmaz. Rezervasyon yalnızca yönetici onayında kesinleşir.</p></div>
         <Link className="secondary-action" href="/dashboard/lessons">Ders takvimine dön</Link>
       </div>
-      <PageNotice error={error} notice={notice} loadError={loadError} loadErrorMessage="Planlama verileri yüklenemedi. Veritabanı migration'ının uygulanmış olduğunu ve RLS politikalarını kontrol edin." />
+      <PageNotice error={error} notice={notice} loadError={loadError} loadErrorMessage="Planlama verileri yüklenemedi. Sayfayı yenileyin veya yöneticinizle iletişime geçin." />
 
       {isAdmin && (
         <section className="form-card">
@@ -182,8 +175,8 @@ export function SessionRequestsManager({
               <label>Eğitmen ata *<select required value={assignedInstructorId} onChange={(e) => setAssignedInstructorId(e.target.value)}><option value="">Eğitmen seçin</option>{instructors.map((instructor) => <option key={instructor.id} value={instructor.id}>{instructor.full_name || "İsimsiz eğitmen"}</option>)}</select></label>
               <label>Seans adı *<input required maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} /></label>
               <label>Katılımcı sayısı *<input required type="number" min="1" max="500" value={attendees} onChange={(e) => setAttendees(e.target.value)} /></label>
-              <label>Başlangıç *<input required type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></label>
-              <label>Bitiş *<input required type="datetime-local" min={startsAt || undefined} value={endsAt} onChange={(e) => setEndsAt(e.target.value)} /></label>
+              <label>Başlangıç (İstanbul saati) *<input required type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></label>
+              <label>Bitiş (İstanbul saati) *<input required type="datetime-local" min={startsAt || undefined} value={endsAt} onChange={(e) => setEndsAt(e.target.value)} /></label>
               <label className="field-wide">Notlar<textarea rows={2} maxLength={2000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="İsteğe bağlı" /></label>
             </div>
             <div className="form-actions"><button type="submit" className="primary-action" disabled={busy}>{busy ? "Taslak oluşturuluyor…" : "Grup dersi taslağı oluştur"}</button></div>
@@ -219,12 +212,12 @@ export function SessionRequestsManager({
           <div className="table-scroll"><table className="data-table"><thead><tr><th>Seans</th><th>Zaman</th><th>Merkez / oda</th><th>Eğitmen / kapasite</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody>{requests.map((r) => (
               <tr key={r.id}>
-                <td><div className="lesson-cell"><span className="person-avatar"><DoorOpen size={16} /></span><span><strong>{r.title}</strong><small>{r.session_type === "private" ? `Özel ders · ${r.member_name ?? "Üye"}` : "Grup dersi"}{r.notes ? ` · ${r.notes}` : ""}</small></span></div></td>
+                <td><div className="lesson-cell"><span className="person-avatar"><DoorOpen size={16} /></span><span><strong>{r.title}</strong><small>{r.session_type === "private" ? `Özel ders · ${r.member_name ?? "Üye"}` : "Grup dersi"}{r.notes ? ` · ${r.notes}` : ""}</small><RequestHistory request={r} /></span></div></td>
                 <td><div className="date-cell"><strong>{formatTime(r.starts_at)}</strong><span>– {formatTime(r.ends_at)}</span></div></td>
                 <td>{r.center_name}<small className="block">{r.room_name ?? "Oda seçilmedi"}</small></td>
                 <td>{r.instructor_name}<small className="block">{r.expected_attendees} kişi</small></td>
                 <td><span className={`status-pill lesson-${r.status === "approved" ? "completed" : r.status === "pending" ? "scheduled" : "cancelled"}`}><span />{statusText[r.status] ?? r.status}</span>{r.review_note && <small className="block">{r.review_note}</small>}</td>
-                <td>{isAdmin && r.status === "pending" ? <div className="row-actions"><input aria-label="Değerlendirme notu" placeholder="Not (isteğe bağlı)" value={reviewNotes[r.id] ?? ""} onChange={(e) => setReviewNotes({ ...reviewNotes, [r.id]: e.target.value })} /><button className="icon-button" type="button" disabled={busy} onClick={() => void review(r.id, true)} aria-label="Talebi onayla" title="Onayla"><Check size={16} /></button><button className="icon-button" type="button" disabled={busy} onClick={() => void review(r.id, false)} aria-label="Talebi reddet" title="Reddet"><X size={16} /></button></div> : "—"}</td>
+                <td><RequestWorkflowControls request={r} isAdmin={isAdmin} currentUserId={currentUserId} pendingGroups={requests.filter(other => other.id !== r.id && other.session_type === "group" && other.status === "pending" && other.room_id === r.room_id && Date.parse(other.starts_at) < Date.parse(r.ends_at) && Date.parse(other.ends_at) > Date.parse(r.starts_at)).length} /></td>
               </tr>
             ))}</tbody>
           </table></div>

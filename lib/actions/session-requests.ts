@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { sessionRequestSchema } from "@/lib/validation/session-request";
+import { sessionRequestSchema, reviewSessionRequestSchema, alternativeSessionRequestSchema, respondAlternativeSchema } from "@/lib/validation/session-request";
 import { requireRole } from "@/lib/supabase/access";
 import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "./result";
 
@@ -47,6 +47,8 @@ function refresh() {
   revalidatePath("/dashboard/attendance");
   revalidatePath("/dashboard/subscriptions");
   revalidatePath("/dashboard/credits");
+  revalidatePath("/dashboard/my-learning");
+  revalidatePath("/dashboard/my-students");
 }
 
 export async function createOrganization(input: unknown): Promise<ActionResult> {
@@ -171,7 +173,7 @@ export async function createSessionRequest(input: unknown): Promise<ActionResult
 
 export async function reviewSessionRequest(input: unknown): Promise<ActionResult> {
   const { supabase } = await requireRole(["admin"]);
-  const parsed = parseInput(z.object({ id: uuid, approve: z.boolean(), note: z.string().trim().max(500).nullable() }), input);
+  const parsed = parseInput(reviewSessionRequestSchema, input);
   if (parsed.failure) return parsed.failure;
   const { error } = await supabase.rpc("review_session_request", {
     p_request_id: parsed.data.id,
@@ -189,4 +191,39 @@ export async function reviewSessionRequest(input: unknown): Promise<ActionResult
   return ok(emailDelivered
     ? resultMessage + " Talep sahibi ve eğitmene e-posta gönderildi."
     : resultMessage + " Uygulama içi bildirim kaydedildi; e-posta gönderimini kontrol edin.");
+}
+
+export async function withdrawSessionRequest(input: unknown): Promise<ActionResult> {
+  const { supabase } = await requireRole(["admin", "instructor"]);
+  const parsed = parseInput(z.object({ id: uuid }), input);
+  if (parsed.failure) return parsed.failure;
+  const { error } = await supabase.rpc("withdraw_session_request", { p_request_id: parsed.data.id });
+  if (error) return fail(dbErrorMessage(error, "Talep geri çekilemedi."));
+  refresh();
+  return ok("Talebiniz geri çekildi. Oda rezervasyonu oluşturulmadı.");
+}
+export async function proposeSessionRequestAlternative(input: unknown): Promise<ActionResult> {
+  const { supabase } = await requireRole(["admin"]);
+  const parsed = parseInput(alternativeSessionRequestSchema, input);
+  if (parsed.failure) return parsed.failure;
+  const { error } = await supabase.rpc("propose_session_request_alternative", {
+    p_request_id: parsed.data.id, p_starts_at: parsed.data.starts_at,
+    p_ends_at: parsed.data.ends_at, p_note: parsed.data.note,
+  });
+  if (error) return fail(dbErrorMessage(error, "Alternatif saat önerilemedi."));
+  refresh();
+  return ok("Alternatif saat talep sahibine iletildi. Oda henüz ayrılmadı.");
+}
+export async function respondSessionRequestAlternative(input: unknown): Promise<ActionResult> {
+  const { supabase } = await requireRole(["admin", "instructor"]);
+  const parsed = parseInput(respondAlternativeSchema, input);
+  if (parsed.failure) return parsed.failure;
+  const { error } = await supabase.rpc("respond_session_request_alternative", {
+    p_request_id: parsed.data.id, p_proposed_at: parsed.data.proposed_at, p_accept: parsed.data.accept,
+  });
+  if (error) return fail(dbErrorMessage(error, "Alternatif saate yanıt kaydedilemedi."));
+  refresh();
+  return ok(parsed.data.accept
+    ? "Alternatif kabul edildi. Talep yönetici onayı bekliyor; oda henüz ayrılmadı."
+    : "Alternatif saat kabul edilmedi. İlk talebiniz onay beklemeye devam ediyor.");
 }

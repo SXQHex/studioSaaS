@@ -5,7 +5,7 @@ import { SessionRequestsManager } from "./session-requests-manager";
 export const metadata = { title: "Seans Talepleri | FTK Studio" };
 
 export default async function SessionRequestsPage() {
-  const { supabase, profile } = await requireRole(["admin", "instructor"]);
+  const { supabase, profile, userId } = await requireRole(["admin", "instructor"]);
   const isAdmin = profile.role === "admin";
   const [resources, requestList] = await Promise.all([
     listSchedulingResources(supabase),
@@ -14,6 +14,7 @@ export default async function SessionRequestsPage() {
   return (
     <SessionRequestsManager
       isAdmin={isAdmin}
+      currentUserId={userId}
       organizations={resources.organizations}
       centers={resources.centers}
       rooms={resources.rooms}

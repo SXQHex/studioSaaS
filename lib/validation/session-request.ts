@@ -27,3 +27,19 @@ export const sessionRequestSchema = z.object({
     ctx.addIssue({ code: "custom", path: ["private_member_id"], message: "Grup dersinde özel üye seçilemez." });
   }
 });
+
+export const reviewSessionRequestSchema = z.object({
+  id: uuid, approve: z.boolean(), note: z.string().trim().max(500).nullable(),
+}).superRefine((value, ctx) => {
+  if (!value.approve && !value.note) ctx.addIssue({ code: "custom", path: ["note"], message: "Ret gerekçesi zorunludur." });
+});
+export const alternativeSessionRequestSchema = z.object({
+  id: uuid, starts_at: z.string().datetime(), ends_at: z.string().datetime(),
+  note: z.string().trim().min(1, "Alternatif saat için açıklama girin.").max(500),
+}).superRefine((value, ctx) => {
+  if (Date.parse(value.ends_at) <= Date.parse(value.starts_at))
+    ctx.addIssue({ code: "custom", path: ["ends_at"], message: "Bitiş saati başlangıçtan sonra olmalı." });
+});
+export const respondAlternativeSchema = z.object({
+  id: uuid, proposed_at: z.string().datetime({ offset: true }), accept: z.boolean(),
+});

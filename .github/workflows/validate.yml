@@ -64,6 +64,7 @@ jobs:
           mv supabase/migrations/20261013131000_cross_center_student_memberships.sql /tmp/20261013131000_cross_center_student_memberships.sql
           mv supabase/migrations/20261013163000_member_account_linking.sql /tmp/member_account_linking.sql
           mv supabase/migrations/20261013180000_student_instructor_panels.sql /tmp/student_instructor_panels.sql
+          mv supabase/migrations/20261013163537_session_request_workflow.sql /tmp/session_request_workflow.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -112,6 +113,8 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/member_account_linking.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/student_instructor_panels.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/student_instructor_panels.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/session_request_workflow.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/session_request_workflow.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |
