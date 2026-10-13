@@ -28,7 +28,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <DashboardShell
       email={session.status === "ready" ? session.email : ""}
-      roleLabel={session.status === "ready" ? session.profile.role : "Rol doğrulanamadı"}
+      roleLabel={session.status === "ready" ? (session.profile.roles.find((r) => ["appowner", "owner", "admin", "instructor", "ainstructor"].includes(r)) ?? "student") : "Rol doğrulanamadı"}
+      roles={session.status === "ready" ? session.profile.roles : []}
       unreadNotificationCount={unreadResult.count ?? 0}
     >
       {children}
