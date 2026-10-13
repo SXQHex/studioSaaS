@@ -97,7 +97,10 @@ export function DashboardShell({
         {roleLabel === "instructor" && (
           <div className="role-banner">Eğitmen erişimi: ders takvimi ve yoklama kullanılabilir; üyelik, abonelik ve kredi yönetimi yönetici rolü gerektirir.</div>
         )}
-        {![ "admin", "instructor", "student" ].includes(roleLabel) && (
+        {roleLabel === "ainstructor" && (
+          <div className="role-banner">Asistan eğitmen erişimi: yalnızca atanmış derslerde yoklama ve bildirimler kullanılabilir.</div>
+        )}
+        {![ "appowner", "owner", "admin", "instructor", "ainstructor", "student" ].includes(roleLabel) && (
           <div className="role-banner">Hesabınızın rolü doğrulanamadı. Yetkilerinizin yüklenmesi için profil kaydını kontrol edin.</div>
         )}
         {children}
