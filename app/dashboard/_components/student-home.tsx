@@ -8,6 +8,9 @@ const reasonLabels: Record<string, string> = { purchase: "Kredi alımı", lesson
 
 export async function StudentHome({ supabase, profileId, fullName }: { supabase: ServerSupabase; profileId: string; fullName: string }) {
   const memberResult = await supabase.from("members").select("id, full_name, is_active, center_id").eq("profile_id", profileId).order("created_at");
+  if (memberResult.error) {
+    return <div className="dashboard-content"><div className="notice error" role="alert">Üye bilgileriniz yüklenemedi. Lütfen tekrar deneyin.</div></div>;
+  }
   const linkedMembers = memberResult.data ?? [];
   const member = linkedMembers[0];
   const linkedIds = linkedMembers.map((m) => m.id);
@@ -17,35 +20,42 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
   }
 
   const now = new Date().toISOString();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  const [subscriptionsResult, attendanceResult, creditsResult] = await Promise.all([
-    supabase.from("subscriptions").select("id, type, status, starts_on, ends_on, credits_purchased, credits_remaining, payment_status").in("member_id", linkedIds).eq("status", "active").lte("starts_on", today).or("ends_on.is.null,ends_on.gte." + today).order("starts_on", { ascending: false }),
+  const todayParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const datePart = (type: string) => todayParts.find((p) => p.type === type)?.value ?? "";
+  const today = `${datePart("year")}-${datePart("month")}-${datePart("day")}`;
+  const [subscriptionsResult, attendanceResult, creditsResult, enrollmentsResult] = await Promise.all([
+    supabase.from("subscriptions").select("id, type, status, starts_on, ends_on, credits_purchased, credits_remaining, payment_status").in("member_id", linkedIds).order("starts_on", { ascending: false }).limit(20),
     supabase.from("attendance").select("id, lesson_id, attended, checked_in_at, notes").in("member_id", linkedIds).order("checked_in_at", { ascending: false }).limit(12),
     supabase.from("credit_transactions").select("id, amount, reason, note, created_at, lesson_id").in("member_id", linkedIds).order("created_at", { ascending: false }).limit(12),
+    supabase.from("lesson_enrollments").select("lesson_id, center_id, member_id").in("member_id", linkedIds),
   ]);
+  const loadError = Boolean(subscriptionsResult.error || attendanceResult.error || creditsResult.error || enrollmentsResult.error);
+  const enrolledLessonIds = [...new Set((enrollmentsResult.data ?? []).map((row) => row.lesson_id))];
   const attendance = attendanceResult.data ?? [];
   const lessonIds = [...new Set(attendance.map((row) => row.lesson_id))];
   const [upcomingPrivate, upcomingGroup, historyLessons] = await Promise.all([
     supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").in("private_member_id", linkedIds).eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8),
-    supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").in("center_id", linkedCenters).eq("type", "group").eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8),
+    enrolledLessonIds.length ? supabase.from("lessons").select("id, title, starts_at, ends_at, status, type").in("id", enrolledLessonIds).in("center_id", linkedCenters).eq("type", "group").eq("status", "scheduled").gte("starts_at", now).order("starts_at").limit(8) : Promise.resolve({ data: [], error: null }),
     lessonIds.length ? supabase.from("lessons").select("id, title, starts_at, status").in("id", lessonIds) : Promise.resolve({ data: [], error: null }),
   ]);
   const upcomingMap = new Map<string, { id: string; title: string; starts_at: string; ends_at: string | null; status: string; type: string }>();
   for (const lesson of [...(upcomingPrivate.data ?? []), ...(upcomingGroup.data ?? [])]) upcomingMap.set(lesson.id, lesson);
   const upcoming = [...upcomingMap.values()].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).slice(0, 8);
   const lessonMap = new Map((historyLessons.data ?? []).map((lesson) => [lesson.id, lesson]));
-  const subscriptions = (subscriptionsResult.data ?? []).filter((item) => item.starts_on <= today && (!item.ends_on || item.ends_on >= today));
+  const allSubscriptions = subscriptionsResult.data ?? [];
+  const subscriptions = allSubscriptions.filter((item) => item.status === "active" && item.starts_on <= today && (!item.ends_on || item.ends_on >= today));
   const credits = subscriptions.reduce((sum, item) => sum + item.credits_remaining, 0);
 
   return <div className="dashboard-content">
-    <div className="welcome-row"><div><p className="eyebrow">ÖĞRENCİ PANELİ</p><h1>Merhaba, {member.full_name || fullName || "öğrenci"}</h1><p className="dashboard-subtitle">Aboneliğinizi, yaklaşan derslerinizi ve geçmiş hareketlerinizi takip edin.</p></div><span className="today-pill">FTK Studio</span></div>
+    {loadError && <div className="notice error" role="alert">Bazı öğrenci verileri yüklenemedi; boş alanlar gerçek kayıt yok anlamına gelmeyebilir.</div>}
+    <div className="welcome-row"><div><p className="eyebrow">ÖĞRENCİ PANELİ</p><h1>Merhaba, {member.full_name || fullName || "öğrenci"}</h1><p className="dashboard-subtitle">Aboneliğinizi, yalnızca kayıtlı olduğunuz dersleri ve geçmiş hareketlerinizi takip edin.{linkedCenters.length > 1 ? ` ${linkedCenters.length} merkezde üyelik kaydınız var.` : ""}</p></div><span className="today-pill">FTK Studio</span></div>
     <div className="metric-grid student-metric-grid">
       <article className="metric-card"><div className="metric-top"><span>Aktif abonelik</span><span className="metric-icon"><CreditCard size={19} /></span></div><strong className="metric-value">{subscriptions.length}</strong><p>{subscriptions.length ? "Aktif paketiniz" : "Aktif paket bulunmuyor"}</p></article>
       <article className="metric-card"><div className="metric-top"><span>Kalan kredi</span><span className="metric-icon"><Wallet size={19} /></span></div><strong className="metric-value">{credits}</strong><p>Aktif aboneliklerde kalan toplam kredi</p></article>
       <article className="metric-card"><div className="metric-top"><span>Yaklaşan ders</span><span className="metric-icon"><CalendarDays size={19} /></span></div><strong className="metric-value">{upcoming.length}</strong><p>Planlanmış ve kayıtlı gelecek dersler</p></article>
     </div>
-    <section className="overview-panel"><div className="panel-heading"><div><h2>Aboneliklerim</h2><p>Aktif paketler ve geçerlilik bilgileri</p></div><CreditCard className="panel-icon" size={19} /></div>
-      {subscriptions.length ? <div className="student-list">{subscriptions.map((item) => <div className="student-list-row" key={item.id}><div><strong>{item.type === "group_4_weeks" ? "4 haftalık grup paketi" : "Özel ders kredi paketi"}</strong><small>{dateOnly(item.starts_on)} başlangıç{item.ends_on ? " · " + dateOnly(item.ends_on) + " bitiş" : " · Bitiş tarihi yok"} · {item.payment_status === "paid" ? "Ödendi" : "Ödeme kontrolü gerekli"}</small></div><span className="student-credit-pill">{item.credits_remaining} / {item.credits_purchased} kredi</span></div>)}</div> : <div className="student-empty">Şu anda aktif abonelik görünmüyor. Paket durumunuzu stüdyo yöneticisiyle kontrol edin.</div>}
+    <section className="overview-panel"><div className="panel-heading"><div><h2>Aboneliklerim</h2><p>Aktif ve geçmiş paketler, kredi ve ödeme durumu</p></div><CreditCard className="panel-icon" size={19} /></div>
+      {allSubscriptions.length ? <div className="student-list">{allSubscriptions.map((item) => <div className="student-list-row" key={item.id}><div><strong>{item.type === "group_4_weeks" ? "4 haftalık grup paketi" : "Özel ders kredi paketi"}</strong><small>{dateOnly(item.starts_on)} başlangıç{item.ends_on ? " · " + dateOnly(item.ends_on) + " bitiş" : " · Bitiş tarihi yok"} · {item.status === "active" ? "Aktif" : item.status === "expired" ? "Süresi doldu" : "İptal"} · {item.payment_status === "paid" ? "Ödendi" : item.payment_status === "refunded" ? "İade edildi" : "Ödeme bekliyor"}</small></div><span className="student-credit-pill">{item.credits_remaining} / {item.credits_purchased} kredi</span></div>)}</div> : <div className="student-empty">Hesabınıza bağlı abonelik bulunmuyor. Paket durumunuzu stüdyo yöneticisiyle kontrol edin.</div>}
     </section>
     <section className="overview-panel"><div className="panel-heading"><div><h2>Yaklaşan dersler</h2><p>Önümüzdeki planlanmış seanslar</p></div><CalendarDays className="panel-icon" size={19} /></div>
       {upcoming.length ? <div className="student-list">{upcoming.map((lesson) => <div className="student-list-row" key={lesson.id}><div><strong>{lesson.title}</strong><small>{dateTime(lesson.starts_at)}{lesson.ends_at ? " – " + new Intl.DateTimeFormat("tr-TR", { timeStyle: "short" }).format(new Date(lesson.ends_at)) : ""}</small></div><span className="type-pill">{lesson.type === "private" ? "Özel ders" : "Grup dersi"}</span></div>)}</div> : <div className="student-empty">Yaklaşan ders kaydı bulunmuyor.</div>}
