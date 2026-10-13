@@ -38,11 +38,18 @@ create table if not exists public.lesson_staff_assignments (
 create index if not exists lesson_staff_assignments_profile_idx
   on public.lesson_staff_assignments (profile_id, lesson_id);
 
+-- Composite keys ensure enrolled members are in the same center as their lesson.
+create unique index if not exists lessons_id_center_multi_role_key on public.lessons (id, center_id);
+create unique index if not exists members_id_center_multi_role_key on public.members (id, center_id);
+
 -- A student is connected to a class through a member enrollment. The existing
 -- members table identifies the student's profile; enrollment is not a global role.
 create table if not exists public.lesson_enrollments (
-  lesson_id uuid not null references public.lessons(id) on delete cascade,
-  member_id uuid not null references public.members(id) on delete cascade,
+  lesson_id uuid not null,
+  member_id uuid not null,
+  center_id uuid not null,
+  foreign key (lesson_id, center_id) references public.lessons(id, center_id) on delete cascade,
+  foreign key (member_id, center_id) references public.members(id, center_id) on delete cascade,
   created_at timestamptz not null default now(),
   primary key (lesson_id, member_id)
 );
