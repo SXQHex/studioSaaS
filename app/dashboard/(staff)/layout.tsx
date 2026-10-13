@@ -7,6 +7,6 @@ import { requireRole } from "@/lib/supabase/access";
  * check: a layout does not re-run on client-side navigation between sibling pages.
  */
 export default async function StaffLayout({ children }: { children: ReactNode }) {
-  await requireRole(["admin", "instructor"]);
+  await requireRole(["admin", "instructor", "ainstructor"]);
   return children;
 }
