@@ -1002,6 +1002,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      my_teaching_lessons: {
+        Args: Record<string, never>
+        Returns: { id: string; center_id: string; title: string; type: Database["public"]["Enums"]["lesson_type"]; starts_at: string; status: Database["public"]["Enums"]["lesson_status"]; expected_attendees: number | null }[]
+      }
+      my_lesson_roster: {
+        Args: { p_lesson_id: string }
+        Returns: { member_id: string; full_name: string; email: string | null; phone: string | null; source: string; attended: boolean | null; checked_in_at: string | null }[]
+      }
       lookup_center_account: {
         Args: { p_center_id: string; p_email: string }
         Returns: { profile_id: string; email: string; full_name: string; linked_member_id: string | null }[]
