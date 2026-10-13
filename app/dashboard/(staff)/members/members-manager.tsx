@@ -1,12 +1,12 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Check, CirclePlus, Edit2, Mail, Phone, UserRound, UserRoundX, X } from "lucide-react";
+import { Check, CirclePlus, Edit2, Link2, Unlink2, Mail, Phone, UserRound, UserRoundX, X } from "lucide-react";
 import { ListFilters } from "@/components/list-filters";
 import { PageNotice } from "@/components/page-notice";
 import { Pagination } from "@/components/pagination";
 import { useActionRunner } from "@/components/use-action-runner";
-import { saveMember, setMemberActive } from "@/lib/actions/members";
+import { saveMember, setMemberActive, lookupCenterAccount, linkMemberAccount, unlinkMemberAccount, type CenterAccount } from "@/lib/actions/members";
 import type { MemberRow } from "@/lib/data/members";
 import type { CenterOption } from "@/lib/data/session-requests";
 
@@ -31,10 +31,16 @@ export function MembersManager({
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [linkingMember, setLinkingMember] = useState<MemberRow | null>(null);
+  const [accountEmail, setAccountEmail] = useState("");
+  const [candidate, setCandidate] = useState<CenterAccount | null>(null);
+  const [lookupError, setLookupError] = useState("");
+  const [lookupBusy, setLookupBusy] = useState(false);
   const [form, setForm] = useState({ ...emptyForm, center_id: centers[0]?.id ?? "" });
   const { busy, pendingId, error, notice, reset, run } = useActionRunner();
 
   function startCreate() {
+    setLinkingMember(null);
     setEditingId(null);
     setForm({ ...emptyForm, center_id: centers[0]?.id ?? "" });
     reset();
@@ -42,6 +48,7 @@ export function MembersManager({
   }
 
   function startEdit(member: MemberRow) {
+    setLinkingMember(null);
     setEditingId(member.id);
     setForm({
       center_id: member.center_id,
@@ -64,6 +71,49 @@ export function MembersManager({
         setForm({ ...emptyForm, center_id: centers[0]?.id ?? "" });
       },
     });
+  }
+
+
+  function startAccountLink(member: MemberRow) {
+    setFormOpen(false);
+    setLinkingMember(member);
+    setAccountEmail(member.email ?? "");
+    setCandidate(null);
+    setLookupError("");
+    reset();
+  }
+
+  async function checkAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!linkingMember) return;
+    setLookupBusy(true);
+    setLookupError("");
+    setCandidate(null);
+    try {
+      const result = await lookupCenterAccount({ center_id: linkingMember.center_id, email: accountEmail });
+      if (!result.ok) setLookupError(result.error);
+      else if (!result.account) setLookupError("Bu e-postayla doğrulanmış bir giriş hesabı bulunamadı.");
+      else setCandidate(result.account);
+    } catch {
+      setLookupError("Hesap sorgulanamadı. Lütfen tekrar deneyin.");
+    } finally {
+      setLookupBusy(false);
+    }
+  }
+
+  async function connectAccount() {
+    if (!linkingMember || !candidate || (candidate.linked_member_id && candidate.linked_member_id !== linkingMember.id)) return;
+    if (!window.confirm(linkingMember.full_name + " kaydı " + candidate.email + " hesabına bağlansın mı?")) return;
+    const memberId = linkingMember.id;
+    await run(() => linkMemberAccount({ member_id: memberId, email: candidate.email }), {
+      rowId: memberId,
+      onSuccess: () => { setLinkingMember(null); setCandidate(null); },
+    });
+  }
+
+  async function disconnectAccount(member: MemberRow) {
+    if (!window.confirm(member.full_name + " kaydının giriş hesabı bağlantısı kaldırılsın mı? Üyelik ve geçmiş kayıtlar silinmez.")) return;
+    await run(() => unlinkMemberAccount({ member_id: member.id }), { rowId: member.id });
   }
 
   async function toggleActive(member: MemberRow) {
@@ -102,6 +152,42 @@ export function MembersManager({
         </section>
       )}
 
+      {linkingMember && (
+        <section className="form-card" aria-label="Giriş hesabı bağlantısı">
+          <div className="form-card-heading">
+            <div><h2>Üye ve giriş hesabını eşleştir</h2>
+              <p><strong>{linkingMember.full_name}</strong> · {centers.find((center) => center.id === linkingMember.center_id)?.name ?? "Merkez"}</p>
+            </div>
+            <button className="icon-button" type="button" onClick={() => setLinkingMember(null)} aria-label="Eşleştirmeyi kapat"><X size={18} /></button>
+          </div>
+          <p className="dashboard-subtitle">Yalnızca e-postası doğrulanmış mevcut bir hesap bağlanabilir. Üyenin iletişim e-postası girilmişse giriş hesabının e-postasıyla aynı olmalıdır.</p>
+          <form className="record-form" onSubmit={checkAccount}>
+            <div className="field-grid">
+              <label>Giriş hesabı e-postası *
+                <input type="email" required maxLength={254} autoComplete="off" value={accountEmail}
+                  onChange={(event) => { setAccountEmail(event.target.value); setCandidate(null); setLookupError(""); }}
+                  placeholder="kullanici@ornek.com" />
+              </label>
+            </div>
+            <div className="form-actions">
+              <button className="secondary-action" type="button" onClick={() => setLinkingMember(null)}>Vazgeç</button>
+              <button className="primary-action" type="submit" disabled={lookupBusy || busy}>{lookupBusy ? "Kontrol ediliyor…" : "Hesabı doğrula"}</button>
+            </div>
+          </form>
+          {lookupError && <div className="notice error" role="alert">{lookupError}</div>}
+          {candidate && (
+            <div className="record-form">
+              <p className="dashboard-subtitle"><strong>Doğrulanan hesap:</strong> {candidate.full_name || "İsimsiz kullanıcı"} · {candidate.email}</p>
+              {candidate.linked_member_id && candidate.linked_member_id !== linkingMember.id
+                ? <div className="notice error" role="alert">Bu hesap aynı merkezde başka bir üye kaydına bağlı. Mükerrer eşleştirme yapılamaz.</div>
+                : linkingMember.profile_id && linkingMember.profile_id !== candidate.profile_id
+                  ? <div className="notice error" role="alert">Üye farklı bir giriş hesabına bağlı. Önce mevcut bağlantıyı kaldırın.</div>
+                  : <button type="button" className="primary-action" onClick={() => void connectAccount()} disabled={busy}>Doğrulanan hesabı üyeye bağla</button>}
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="table-card">
         <div className="table-toolbar"><div><h2>Üye listesi</h2><p>{total} kayıt bulundu</p></div><ListFilters action="/dashboard/members" query={query} searchPlaceholder="Üye ara…" searchLabel="Üye ara" /></div>
         {stats.total === 0 && !loadError ? (
@@ -111,7 +197,7 @@ export function MembersManager({
         ) : (
           <div className="table-scroll">
             <table className="data-table">
-              <thead><tr><th>Üye</th><th>Merkez</th><th>İletişim</th><th>Durum</th><th className="actions-head">İşlem</th></tr></thead>
+              <thead><tr><th>Üye</th><th>Merkez</th><th>İletişim</th><th>Durum</th><th>Giriş hesabı</th><th className="actions-head">İşlem</th></tr></thead>
               <tbody>
                 {members.map((member) => (
                   <tr key={member.id}>
@@ -119,7 +205,12 @@ export function MembersManager({
                     <td>{centers.find((center) => center.id === member.center_id)?.name ?? "Merkez"}</td>
                     <td><div className="contact-cell">{member.phone && <span><Phone size={13} />{member.phone}</span>}{member.email && <span><Mail size={13} />{member.email}</span>}{!member.phone && !member.email && <span className="subtle">Bilgi girilmedi</span>}</div></td>
                     <td><span className={member.is_active ? "status-pill active-status" : "status-pill inactive-status"}><span />{member.is_active ? "Aktif" : "Pasif"}</span></td>
-                    <td><div className="row-actions"><button className="icon-button" type="button" onClick={() => startEdit(member)} aria-label={`${member.full_name} bilgilerini düzenle`}><Edit2 size={16} /></button><button className="icon-button" type="button" disabled={pendingId === member.id} onClick={() => void toggleActive(member)} aria-label={member.is_active ? "Üyeyi pasife al" : "Üyeyi aktifleştir"}>{member.is_active ? <UserRoundX size={16} /> : <Check size={16} />}</button></div></td>
+                    <td><span className={member.profile_id ? "status-pill active-status" : "status-pill inactive-status"}><span />{member.profile_id ? "Bağlı" : "Bağlı değil"}</span></td>
+                    <td><div className="row-actions">
+                      {member.profile_id
+                        ? <button className="icon-button" type="button" disabled={busy || pendingId === member.id} onClick={() => void disconnectAccount(member)} aria-label={member.full_name + " giriş hesabı bağlantısını kaldır"} title="Hesap bağlantısını kaldır"><Unlink2 size={16} /></button>
+                        : <button className="icon-button" type="button" onClick={() => startAccountLink(member)} aria-label={member.full_name + " giriş hesabını bağla"} title="Giriş hesabı bağla"><Link2 size={16} /></button>}
+                      <button className="icon-button" type="button" onClick={() => startEdit(member)} aria-label={`${member.full_name} bilgilerini düzenle`}><Edit2 size={16} /></button><button className="icon-button" type="button" disabled={pendingId === member.id} onClick={() => void toggleActive(member)} aria-label={member.is_active ? "Üyeyi pasife al" : "Üyeyi aktifleştir"}>{member.is_active ? <UserRoundX size={16} /> : <Check size={16} />}</button></div></td>
                   </tr>
                 ))}
               </tbody>

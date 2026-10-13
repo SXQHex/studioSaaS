@@ -8,6 +8,8 @@ import {
   CreditCard,
   LayoutDashboard,
   Music2,
+  ShieldCheck,
+  GraduationCap,
   Users,
   Wallet,
 } from "lucide-react";
@@ -28,6 +30,8 @@ const roleNames: Record<string, string> = {
 const navigation = [
   { href: "/dashboard", label: "Genel bakış", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/members", label: "Üyeler", icon: Users },
+  { href: "/dashboard/roles", label: "Merkez rolleri", icon: ShieldCheck },
+  { href: "/dashboard/my-learning", label: "Öğrenci görünümüm", icon: GraduationCap },
   { href: "/dashboard/lessons", label: "Ders takvimi", icon: CalendarDays },
   { href: "/dashboard/attendance", label: "Yoklama", icon: Activity },
   { href: "/dashboard/subscriptions", label: "Abonelikler", icon: CreditCard },
@@ -55,9 +59,9 @@ export function DashboardShell({
   const isInstructor = roles.includes("instructor");
   const isAssistant = roles.includes("ainstructor");
   const visibleNavigation = isManager ? navigation
-    : isInstructor ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications"].includes(item.href))
-    : isAssistant ? navigation.filter((item) => ["/dashboard", "/dashboard/attendance", "/dashboard/notifications"].includes(item.href))
-    : navigation.filter((item) => ["/dashboard", "/dashboard/notifications"].includes(item.href));
+    : isInstructor ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications", "/dashboard/my-learning"].includes(item.href))
+    : isAssistant ? navigation.filter((item) => ["/dashboard", "/dashboard/attendance", "/dashboard/notifications", "/dashboard/my-learning"].includes(item.href))
+    : navigation.filter((item) => ["/dashboard", "/dashboard/notifications", "/dashboard/my-learning"].includes(item.href));
 
   return (
     <main className="dashboard-shell">
