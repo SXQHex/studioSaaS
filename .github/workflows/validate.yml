@@ -62,6 +62,7 @@ jobs:
           mv supabase/migrations/20261013124500_scoped_assignment_policies.sql /tmp/20261013124500_scoped_assignment_policies.sql
           mv supabase/migrations/20261013130500_scoped_notifications.sql /tmp/20261013130500_scoped_notifications.sql
           mv supabase/migrations/20261013131000_cross_center_student_memberships.sql /tmp/20261013131000_cross_center_student_memberships.sql
+          mv supabase/migrations/20261013163000_member_account_linking.sql /tmp/member_account_linking.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -106,6 +107,8 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013131000_cross_center_student_memberships.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_role_access.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/scoped_cutover_security.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/member_account_linking.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/member_account_linking.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |
