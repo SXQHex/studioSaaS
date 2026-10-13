@@ -53,3 +53,23 @@ describe("sessionRequestSchema", () => {
     }).success).toBe(false);
   });
 });
+
+import { reviewSessionRequestSchema, alternativeSessionRequestSchema, respondAlternativeSchema } from "@/lib/validation/session-request";
+describe("request decisions", () => {
+  it("requires a nonempty rejection reason and permits optional approval notes", () => {
+    expect(reviewSessionRequestSchema.safeParse({ id: center, approve: false, note: "  " }).success).toBe(false);
+    expect(reviewSessionRequestSchema.safeParse({ id: center, approve: false, note: "Grup dersi planı" }).success).toBe(true);
+    expect(reviewSessionRequestSchema.safeParse({ id: center, approve: true, note: null }).success).toBe(true);
+  });
+  it("requires an alternative explanation and increasing times", () => {
+    const proposal = { id: center, starts_at: window.starts_at, ends_at: window.ends_at, note: "Grup programı" };
+    expect(alternativeSessionRequestSchema.safeParse(proposal).success).toBe(true);
+    expect(alternativeSessionRequestSchema.safeParse({ ...proposal, note: " " }).success).toBe(false);
+    expect(alternativeSessionRequestSchema.safeParse({ ...proposal, ends_at: proposal.starts_at }).success).toBe(false);
+  });
+  it("requires the exact proposal version for an alternative response", () => {
+    expect(respondAlternativeSchema.safeParse({ id: center, proposed_at: "2026-10-13T16:40:00.123456+00:00", accept: true }).success).toBe(true);
+    expect(respondAlternativeSchema.safeParse({ id: center, accept: true }).success).toBe(false);
+    expect(respondAlternativeSchema.safeParse({ id: center, proposed_at: "not-a-date", accept: false }).success).toBe(false);
+  });
+});

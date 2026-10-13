@@ -9,3 +9,9 @@ export const studioTime = (value: string) => new Intl.DateTimeFormat("tr-TR", {
 export const studioDate = (value: string) => new Intl.DateTimeFormat("tr-TR", {
   dateStyle: "medium", timeZone,
 }).format(new Date(value));
+
+/** datetime-local inputs are explicitly entered in the studio's Istanbul timezone. */
+export function studioInputToIso(value: string) {
+  const date = new Date(value + "+03:00");
+  return value && !Number.isNaN(date.getTime()) ? date.toISOString() : "";
+}

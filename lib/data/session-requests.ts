@@ -9,8 +9,9 @@ export type InstructorOption = Pick<Tables<"profiles">, "id" | "full_name">;
 export type SessionRequestRow = Pick<
   Tables<"session_requests">,
   "id" | "organization_id" | "center_id" | "room_id" | "instructor_id" | "session_type" | "title" |
-  "private_member_id" | "starts_at" | "ends_at" | "expected_attendees" | "notes" | "status" | "created_at" | "review_note"
-> & { center_name: string; room_name: string | null; instructor_name: string; member_name: string | null };
+  "private_member_id" | "starts_at" | "ends_at" | "expected_attendees" | "notes" | "status" | "created_at" | "review_note" | "requested_by" | "approved_lesson_id" |
+  "alternative_starts_at" | "alternative_ends_at" | "alternative_note" | "alternative_proposed_at"
+> & { center_name: string; room_name: string | null; instructor_name: string; member_name: string | null; events: Tables<"session_request_events">[] };
 
 export async function listSchedulingResources(supabase: ServerSupabase) {
   const [organizations, centers, rooms, members, instructors, admins] = await Promise.all([
@@ -44,10 +45,11 @@ export async function listSchedulingResources(supabase: ServerSupabase) {
 
 export async function listSessionRequests(supabase: ServerSupabase) {
   const query = supabase.from("session_requests")
-    .select("id, organization_id, center_id, room_id, instructor_id, session_type, title, private_member_id, starts_at, ends_at, expected_attendees, notes, status, created_at, review_note")
+    .select("id, organization_id, center_id, room_id, instructor_id, session_type, title, private_member_id, starts_at, ends_at, expected_attendees, notes, status, created_at, review_note, requested_by, approved_lesson_id, alternative_starts_at, alternative_ends_at, alternative_note, alternative_proposed_at")
     .order("created_at", { ascending: false }).limit(200);
   const { data, error } = await query;
   const requests = data ?? [];
+  const events = requests.length ? await supabase.from("session_request_events").select("*").in("request_id", requests.map(r => r.id)).order("created_at", { ascending: false }).limit(1000) : { data: [], error: null };
   const centerIds = [...new Set(requests.map((r) => r.center_id))];
   const roomIds = [...new Set(requests.map((r) => r.room_id).filter((id): id is string => Boolean(id)))];
   const instructorIds = [...new Set(requests.map((r) => r.instructor_id))];
@@ -66,11 +68,12 @@ export async function listSessionRequests(supabase: ServerSupabase) {
   return {
     rows: requests.map((r) => ({
       ...r,
+      events: (events.data ?? []).filter(event => event.request_id === r.id),
       center_name: centerMap.get(r.center_id)?.name ?? "Merkez",
       room_name: r.room_id ? roomMap.get(r.room_id)?.name ?? null : null,
       instructor_name: instructorMap.get(r.instructor_id)?.full_name ?? "Eğitmen",
       member_name: r.private_member_id ? memberMap.get(r.private_member_id)?.full_name ?? null : null,
     })) as SessionRequestRow[],
-    error: Boolean(error),
+    error: Boolean(error || events.error),
   };
 }

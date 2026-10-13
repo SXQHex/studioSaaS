@@ -19,3 +19,11 @@ describe.each(["UTC", "America/Los_Angeles"])("studio dates on a %s host", (host
     expect(studioDate("2026-10-20")).toBe("20 Eki 2026");
   });
 });
+
+import { studioInputToIso } from "@/lib/studio-date";
+it("interprets studio input in Istanbul even on a Los Angeles host", () => {
+  process.env.TZ = "America/Los_Angeles";
+  expect(studioInputToIso("2026-10-20T19:00")).toBe("2026-10-20T16:00:00.000Z");
+  expect(studioInputToIso("2026-10-21T01:30")).toBe("2026-10-20T22:30:00.000Z");
+  expect(studioInputToIso("")).toBe("");
+});

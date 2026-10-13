@@ -36,3 +36,5 @@
 - Düzeltme için UTC ve America/Los_Angeles ortamlarında 4 saat/gün sınırı testi eklendi. Toplam 52 unit testi, TypeScript ve production build geçti. Production build üzerinde oturumlu öğrenci ekranı 19:00–20:00 gösterdi; 390px genişlikte taşma bulunmadı.
 
 **Açık kabul ölçütü:** Gerçek sıfırlama e-postasının teslimi, e-posta şablonu ve redirect allowlist bu çalışmada doğrulanmadı. Doğrudan üretilen fixture bağlantısı e-posta teslim kanıtı değildir. Todo 2'nin kodu ve oturumlu panel/şifre akışları doğrulandı; e-posta üzerinden tam uçtan uca kabul için bu son kontrol açık kalır.
+
+2026-10-13 kullanıcı kararı: Gerçek e-posta kabul kontrolü diğer gerçek kontrollerle birlikte sona bırakılacak; açık kalır.

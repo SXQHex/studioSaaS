@@ -770,8 +770,19 @@ export type Database = {
           },
         ]
       }
+      session_request_events: {
+        Row: { id: string; request_id: string; actor_id: string | null; action: string; note: string | null; details: Json; created_at: string }
+        Insert: { id?: string; request_id: string; actor_id?: string | null; action: string; note?: string | null; details?: Json; created_at?: string }
+        Update: { id?: string; request_id?: string; actor_id?: string | null; action?: string; note?: string | null; details?: Json; created_at?: string }
+        Relationships: []
+      }
       session_requests: {
         Row: {
+          alternative_starts_at: string | null
+          alternative_ends_at: string | null
+          alternative_note: string | null
+          alternative_proposed_at: string | null
+          alternative_proposed_by: string | null
           approved_lesson_id: string | null
           center_id: string
           created_at: string
@@ -793,6 +804,11 @@ export type Database = {
           title: string
         }
         Insert: {
+          alternative_starts_at?: string | null
+          alternative_ends_at?: string | null
+          alternative_note?: string | null
+          alternative_proposed_at?: string | null
+          alternative_proposed_by?: string | null
           approved_lesson_id?: string | null
           center_id: string
           created_at?: string
@@ -814,6 +830,11 @@ export type Database = {
           title: string
         }
         Update: {
+          alternative_starts_at?: string | null
+          alternative_ends_at?: string | null
+          alternative_note?: string | null
+          alternative_proposed_at?: string | null
+          alternative_proposed_by?: string | null
           approved_lesson_id?: string | null
           center_id?: string
           created_at?: string
@@ -1062,6 +1083,9 @@ export type Database = {
           id: string
         }[]
       }
+      withdraw_session_request: { Args: { p_request_id: string }; Returns: undefined }
+      propose_session_request_alternative: { Args: { p_request_id: string; p_starts_at: string; p_ends_at: string; p_note: string }; Returns: undefined }
+      respond_session_request_alternative: { Args: { p_request_id: string; p_proposed_at: string; p_accept: boolean }; Returns: undefined }
       review_session_request: {
         Args: {
           p_approve: boolean
