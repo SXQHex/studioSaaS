@@ -1,12 +1,12 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Check, CirclePlus, Edit2, Mail, Phone, UserRound, UserRoundX, X } from "lucide-react";
+import { Check, CirclePlus, Edit2, Link2, Unlink2, Mail, Phone, UserRound, UserRoundX, X } from "lucide-react";
 import { ListFilters } from "@/components/list-filters";
 import { PageNotice } from "@/components/page-notice";
 import { Pagination } from "@/components/pagination";
 import { useActionRunner } from "@/components/use-action-runner";
-import { saveMember, setMemberActive } from "@/lib/actions/members";
+import { saveMember, setMemberActive, lookupCenterAccount, linkMemberAccount, unlinkMemberAccount, type CenterAccount } from "@/lib/actions/members";
 import type { MemberRow } from "@/lib/data/members";
 import type { CenterOption } from "@/lib/data/session-requests";
 
@@ -31,10 +31,16 @@ export function MembersManager({
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [linkingMember, setLinkingMember] = useState<MemberRow | null>(null);
+  const [accountEmail, setAccountEmail] = useState("");
+  const [candidate, setCandidate] = useState<CenterAccount | null>(null);
+  const [lookupError, setLookupError] = useState("");
+  const [lookupBusy, setLookupBusy] = useState(false);
   const [form, setForm] = useState({ ...emptyForm, center_id: centers[0]?.id ?? "" });
   const { busy, pendingId, error, notice, reset, run } = useActionRunner();
 
   function startCreate() {
+    setLinkingMember(null);
     setEditingId(null);
     setForm({ ...emptyForm, center_id: centers[0]?.id ?? "" });
     reset();
@@ -42,6 +48,7 @@ export function MembersManager({
   }
 
   function startEdit(member: MemberRow) {
+    setLinkingMember(null);
     setEditingId(member.id);
     setForm({
       center_id: member.center_id,
@@ -64,6 +71,49 @@ export function MembersManager({
         setForm({ ...emptyForm, center_id: centers[0]?.id ?? "" });
       },
     });
+  }
+
+
+  function startAccountLink(member: MemberRow) {
+    setFormOpen(false);
+    setLinkingMember(member);
+    setAccountEmail(member.email ?? "");
+    setCandidate(null);
+    setLookupError("");
+    reset();
+  }
+
+  async function checkAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!linkingMember) return;
+    setLookupBusy(true);
+    setLookupError("");
+    setCandidate(null);
+    try {
+      const result = await lookupCenterAccount({ center_id: linkingMember.center_id, email: accountEmail });
+      if (!result.ok) setLookupError(result.error);
+      else if (!result.account) setLookupError("Bu e-postayla doğrulanmış bir giriş hesabı bulunamadı.");
+      else setCandidate(result.account);
+    } catch {
+      setLookupError("Hesap sorgulanamadı. Lütfen tekrar deneyin.");
+    } finally {
+      setLookupBusy(false);
+    }
+  }
+
+  async function connectAccount() {
+    if (!linkingMember || !candidate || (candidate.linked_member_id && candidate.linked_member_id !== linkingMember.id)) return;
+    if (!window.confirm(linkingMember.full_name + " kaydı " + candidate.email + " hesabına bağlansın mı?")) return;
+    const memberId = linkingMember.id;
+    await run(() => linkMemberAccount({ member_id: memberId, email: candidate.email }), {
+      rowId: memberId,
+      onSuccess: () => { setLinkingMember(null); setCandidate(null); },
+    });
+  }
+
+  async function disconnectAccount(member: MemberRow) {
+    if (!window.confirm(member.full_name + " kaydının giriş hesabı bağlantısı kaldırılsın mı? Üyelik ve geçmiş kayıtlar silinmez.")) return;
+    await run(() => unlinkMemberAccount({ member_id: member.id }), { rowId: member.id });
   }
 
   async function toggleActive(member: MemberRow) {
