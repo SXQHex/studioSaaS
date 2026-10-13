@@ -1029,6 +1029,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      planned_group_usage: { Args: { p_request_ids: string[] }; Returns: {request_id:string;title:string;starts_at:string;ends_at:string}[] }
+
       waitlist_command: { Args: { p_data: Json }; Returns: Json }
       groups_command: { Args: { p_data: Json }; Returns: Json }
       payments_command: { Args: { p_data: Json }; Returns: Json }

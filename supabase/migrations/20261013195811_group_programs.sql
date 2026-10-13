@@ -86,3 +86,18 @@ begin
 end;$$;
 create trigger enrollment_capacity before insert or update on public.lesson_enrollments for each row execute function app_private.enforce_lesson_capacity();
 revoke all on function app_private.enforce_lesson_capacity() from public,anon,authenticated;
+
+create function app_private.planned_group_usage(p_request_ids uuid[])
+returns table(request_id uuid,title text,starts_at timestamptz,ends_at timestamptz)
+language sql stable security definer set search_path='' as $$
+ select r.id,l.title,l.starts_at,l.ends_at from public.session_requests r join public.lessons l
+ on l.center_id=r.center_id and l.room_id=r.room_id and l.type='group' and l.status='scheduled'
+ and tstzrange(l.starts_at,l.ends_at,'[)')&&tstzrange(r.starts_at,r.ends_at,'[)')
+ where r.id=any(p_request_ids) and r.session_type='private' and auth.uid() is not null and app_private.can_manage_center(r.center_id)
+ order by l.starts_at;
+$$;
+create function public.planned_group_usage(p_request_ids uuid[])
+returns table(request_id uuid,title text,starts_at timestamptz,ends_at timestamptz)
+language sql stable security invoker set search_path='' as $$ select * from app_private.planned_group_usage(p_request_ids);$$;
+revoke all on function app_private.planned_group_usage(uuid[]),public.planned_group_usage(uuid[]) from public,anon;
+grant execute on function app_private.planned_group_usage(uuid[]),public.planned_group_usage(uuid[]) to authenticated;

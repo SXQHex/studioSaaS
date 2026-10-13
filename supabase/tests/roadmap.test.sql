@@ -183,4 +183,14 @@ if not denied then raise exception 'Same receipt reversed twice';end if;
 end;$$;
 reset role;
 
+set local role authenticated;
+do $$declare req uuid;begin
+perform set_config('request.jwt.claim.sub','b1000000-0000-4000-8000-000000000002',true);
+req:=public.create_session_request('b3000000-0000-4000-8000-000000000001','b6000000-0000-4000-8000-000000000001','private','Group usage context','b4000000-0000-4000-8000-000000000001',now()+interval '30 days',now()+interval '30 days 1 hour',1,null);
+if exists(select 1 from public.planned_group_usage(array[req])) then raise exception 'Instructor accessed manager planning context';end if;
+perform set_config('request.jwt.claim.sub','b1000000-0000-4000-8000-000000000001',true);
+if (select count(*) from public.planned_group_usage(array[req]))<>1 then raise exception 'Manager cannot see planned group usage';end if;
+end;$$;
+reset role;
+
 rollback;

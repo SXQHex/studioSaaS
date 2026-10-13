@@ -19,7 +19,7 @@ begin
  elsif p_module='payments' then
  return result||jsonb_build_object(
  'subscriptions',coalesce((select jsonb_agg(jsonb_build_object('id',s.id,'label',m.full_name||' · '||s.type::text,'amount',s.amount,'paid',coalesce(p.total,0),'balance',s.amount-coalesce(p.total,0),'payment_status',s.payment_status)) from public.subscriptions s join public.members m on m.id=s.member_id left join lateral(select sum(amount) total from public.manual_payments where subscription_id=s.id) p on true where app_private.can_manage_center(s.center_id)),'[]'),
- 'payments',coalesce((select jsonb_agg(to_jsonb(p)||jsonb_build_object('member',m.full_name,'actor',pr.full_name)) from public.manual_payments p join public.subscriptions s on s.id=p.subscription_id join public.members m on m.id=s.member_id left join public.profiles pr on pr.id=p.actor_id where app_private.can_manage_center(p.center_id)),'[]'));
+ 'payments',coalesce((select jsonb_agg(to_jsonb(p)||jsonb_build_object('member',m.full_name,'actor',coalesce(nullif(pr.full_name,''),(select email from auth.users where id=p.actor_id),'Aktarılan kayıt'))) from public.manual_payments p join public.subscriptions s on s.id=p.subscription_id join public.members m on m.id=s.member_id left join public.profiles pr on pr.id=p.actor_id where app_private.can_manage_center(p.center_id)),'[]'));
  elsif p_module='crm' then
  return result||jsonb_build_object(
  'leads',coalesce((select jsonb_agg(to_jsonb(l)||jsonb_build_object('label',l.full_name)) from public.crm_leads l where app_private.can_manage_center(l.center_id)),'[]'),

@@ -213,7 +213,7 @@ export function SessionRequestsManager({
             <tbody>{requests.map((r) => (
               <tr key={r.id}>
                 <td><div className="lesson-cell"><span className="person-avatar"><DoorOpen size={16} /></span><span><strong>{r.title}</strong><small>{r.session_type === "private" ? `Özel ders · ${r.member_name ?? "Üye"}` : "Grup dersi"}{r.notes ? ` · ${r.notes}` : ""}</small><RequestHistory request={r} /></span></div></td>
-                <td><div className="date-cell"><strong>{formatTime(r.starts_at)}</strong><span>– {formatTime(r.ends_at)}</span></div></td>
+                <td><div className="date-cell"><strong>{formatTime(r.starts_at)}</strong><span>– {formatTime(r.ends_at)}</span>{r.planned_groups.length>0 && <div><strong>Planlanan grup kullanımı</strong>{r.planned_groups.map(g=><small className="block" key={g.starts_at}>{g.title} · {formatTime(g.starts_at)} – {formatTime(g.ends_at)}</small>)}</div>}</div></td>
                 <td>{r.center_name}<small className="block">{r.room_name ?? "Oda seçilmedi"}</small></td>
                 <td>{r.instructor_name}<small className="block">{r.expected_attendees} kişi</small></td>
                 <td><span className={`status-pill lesson-${r.status === "approved" ? "completed" : r.status === "pending" ? "scheduled" : "cancelled"}`}><span />{statusText[r.status] ?? r.status}</span>{r.review_note && <small className="block">{r.review_note}</small>}</td>
