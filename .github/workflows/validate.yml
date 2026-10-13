@@ -49,6 +49,7 @@ jobs:
           # Hold the new forward migration until the baseline has been loaded.
           mv supabase/migrations/20261012180000_harden_internal_function_privileges.sql /tmp/harden_internal_function_privileges.sql
           mv supabase/migrations/20261013001000_scoped_multi_role_foundation.sql /tmp/scoped_multi_role_foundation.sql
+          mv supabase/migrations/20261013120000_backfill_scoped_roles.sql /tmp/backfill_scoped_roles.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -78,6 +79,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/center_isolation.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/scoped_multi_role_foundation.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/multi_role_foundation.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/backfill_scoped_roles.sql
       - name: Measure representative query plans
         shell: bash
         run: |
