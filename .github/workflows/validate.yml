@@ -65,6 +65,13 @@ jobs:
           mv supabase/migrations/20261013163000_member_account_linking.sql /tmp/member_account_linking.sql
           mv supabase/migrations/20261013180000_student_instructor_panels.sql /tmp/student_instructor_panels.sql
           mv supabase/migrations/20261013163537_session_request_workflow.sql /tmp/session_request_workflow.sql
+          mv supabase/migrations/20261013195811_group_programs.sql /tmp/20261013195811_group_programs.sql
+          mv supabase/migrations/20261013200017_manual_collections.sql /tmp/20261013200017_manual_collections.sql
+          mv supabase/migrations/20261013200126_lesson_lifecycle.sql /tmp/20261013200126_lesson_lifecycle.sql
+          mv supabase/migrations/20261013200343_operational_notifications.sql /tmp/20261013200343_operational_notifications.sql
+          mv supabase/migrations/20261013200515_marketing_crm.sql /tmp/20261013200515_marketing_crm.sql
+          mv supabase/migrations/20261013200611_studio_reports.sql /tmp/20261013200611_studio_reports.sql
+          mv supabase/migrations/20261013201345_group_waitlist.sql /tmp/20261013201345_group_waitlist.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -115,6 +122,14 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/student_instructor_panels.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/session_request_workflow.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/session_request_workflow.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013195811_group_programs.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200017_manual_collections.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200126_lesson_lifecycle.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200343_operational_notifications.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200515_marketing_crm.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200611_studio_reports.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013201345_group_waitlist.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/roadmap.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |

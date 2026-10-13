@@ -18,6 +18,8 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
     return <div className="dashboard-content"><div className="welcome-row"><div><p className="eyebrow">ÖĞRENCİ HESABI</p><h1>Hoş geldiniz{fullName ? ", " + fullName : ""}</h1><p className="dashboard-subtitle">Hesabınız henüz bir üye kaydıyla eşleştirilmemiş.</p></div><span className="today-pill">FTK Studio</span></div><section className="overview-panel"><div className="panel-heading"><div><h2>Üyelik eşleştirmesi gerekiyor</h2><p>Abonelik, kredi ve ders bilgilerinizi gösterebilmemiz için stüdyo yöneticisinin üye kaydınızı bu giriş hesabına bağlaması gerekiyor.</p></div></div></section></div>;
   }
 
+  const { data: cancellations } = await supabase.from("lesson_member_outcomes").select("lesson_id").in("member_id",linkedIds).in("outcome",["student_cancel","late_cancel"]);
+  const cancelledIds = new Set((cancellations ?? []).map(row=>row.lesson_id));
   const now = new Date().toISOString();
   const todayParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
   const datePart = (type: string) => todayParts.find((p) => p.type === type)?.value ?? "";
@@ -38,7 +40,7 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
     lessonIds.length ? supabase.from("lessons").select("id, title, starts_at, status").in("id", lessonIds) : Promise.resolve({ data: [], error: null }),
   ]);
   const upcomingMap = new Map<string, { id: string; title: string; starts_at: string; ends_at: string | null; status: string; type: string }>();
-  for (const lesson of [...(upcomingPrivate.data ?? []), ...(upcomingGroup.data ?? [])]) upcomingMap.set(lesson.id, lesson);
+  for (const lesson of [...(upcomingPrivate.data ?? []), ...(upcomingGroup.data ?? [])]) if (!cancelledIds.has(lesson.id)) upcomingMap.set(lesson.id, lesson);
   const upcoming = [...upcomingMap.values()].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).slice(0, 8);
   const lessonMap = new Map((historyLessons.data ?? []).map((lesson) => [lesson.id, lesson]));
   const allSubscriptions = subscriptionsResult.data ?? [];

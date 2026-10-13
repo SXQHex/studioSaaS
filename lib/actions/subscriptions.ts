@@ -52,6 +52,7 @@ export async function updateSubscription(input: unknown): Promise<ActionResult> 
   const { data, failure } = parseInput(subscriptionUpdateSchema, input);
   if (failure) return failure;
 
+  if (data.payment_status) return fail("Ödeme değişikliklerini tahsilat defterinden yapın.");
   const changes: {
     status?: "active" | "expired" | "cancelled";
     payment_status?: "pending" | "paid";
