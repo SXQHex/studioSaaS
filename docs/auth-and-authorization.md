@@ -18,3 +18,10 @@ RBAC determines allowed operations; ABAC evaluates attributes such as organizati
 ## Next.js authentication route group
 
 Authentication pages live in `app/(auth)/login`, `app/(auth)/register`, and `app/(auth)/reset-password`. The confirmation handler lives in `app/(auth)/confirm/route.ts`. The `(auth)` segment is a Next.js route group and does not appear in public URLs; existing `/login`, `/register`, `/reset-password`, and `/confirm` paths remain unchanged. `/reset-password` displays the password form, while `/confirm` verifies emailed tokens and redirects to the appropriate page. The login API remains `/api/auth/login`.
+
+## Phased multi-role rollout (2026-10-13)
+
+1. Additive schema foundation: `platform_role_assignments`, `organization_role_assignments`, `center_role_assignments`, `lesson_staff_assignments`, and `lesson_enrollments`. A person can hold multiple roles in different scopes and be enrolled in a lesson at the same time. The student context is derived from enrollment or the person's own profile.
+2. **Not yet active authorization:** Existing `profiles.role`, `center_admins`, `lessons.instructor_id` and corresponding RLS remain in effect. New relationship tables grant authenticated users only self-read, with no client mutation privileges. Do not use them to grant production privileges before backfill and policy cutover.
+3. Next stage: test scope integrity (same organization/center across assignments and enrollment), backfill historical administrator/instructor relationships, migrate server session and pages to multi-context role resolution, implement deny-by-default RLS for all affected CRUD operations, and add negative cross-center/cross-organization tests. Then remove the legacy single-role field only when no application code relies on it.
+4. Privileged role assignment must be performed by vetted server/database flows. Do not infer or grant `appowner`, `owner`, `admin`, `instructor` or `ainstructor` from user-editable Auth metadata.

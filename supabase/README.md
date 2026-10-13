@@ -4,6 +4,7 @@
 | --- | --- |
 | `schema/00_baseline_snapshot.sql` | Schema-only reconstruction of the current StudioSaaS database: center tenancy, rooms/session requests, notifications, constraints, indexes, functions, triggers, and RLS. No user or tenant rows are seeded. Run only against a fresh isolated Supabase database. |
 | `migrations/20261012180000_harden_internal_function_privileges.sql` | Forward-only hardening for `app_private` function execution privileges. Test against an isolated database and review the restore plan before applying to production. |
+| `migrations/20261013001000_scoped_multi_role_foundation.sql` | Additive scoped multi-role tables and read-only RLS; does not activate new authorization or replace the legacy profile role. Production application requires a separate backup/cutover review. |
 
 ## Working with the database
 
