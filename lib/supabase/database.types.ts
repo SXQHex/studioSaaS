@@ -974,7 +974,7 @@ export type Database = {
     Functions: {
       my_scoped_roles: { Args: Record<string, never>; Returns: { role: string; scope_type: string; scope_id: string | null }[] }
       create_center: {
-        Args: { p_address?: string; p_name: string; p_organization_id: string }
+        Args: { p_address?: string | null; p_name: string; p_organization_id: string }
         Returns: string
       }
       create_session_request: {
