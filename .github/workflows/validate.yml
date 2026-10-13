@@ -2,7 +2,7 @@ name: Validate
 
 on:
   push:
-    branches: [main, 'fix/**']
+    branches: [main, 'fix/**', 'recovery/**']
   pull_request:
     branches: [main, claude/architecture-improvements, feat/session-room-booking-approval]
 
@@ -72,6 +72,7 @@ jobs:
           mv supabase/migrations/20261013200515_marketing_crm.sql /tmp/20261013200515_marketing_crm.sql
           mv supabase/migrations/20261013200611_studio_reports.sql /tmp/20261013200611_studio_reports.sql
           mv supabase/migrations/20261013201345_group_waitlist.sql /tmp/20261013201345_group_waitlist.sql
+          mv supabase/migrations/20261013230735_recovery_consistency_fixes.sql /tmp/20261013230735_recovery_consistency_fixes.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -129,7 +130,9 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200515_marketing_crm.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013200611_studio_reports.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013201345_group_waitlist.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013230735_recovery_consistency_fixes.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/roadmap.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/recovery_consistency.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |

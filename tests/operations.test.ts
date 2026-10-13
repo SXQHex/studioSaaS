@@ -14,6 +14,12 @@ describe("roadmap operation inputs",()=>{
   expect(paymentsOperation.safeParse(p).success).toBe(true);
   for(const patch of [{amount:-1},{amount:0},{amount:10.001},{key:"bad"},{note:" "}])expect(paymentsOperation.safeParse({...p,...patch}).success).toBe(false);
  });
+ it("records only the supported manual payment methods",()=>{
+  const p={action:"collect",subscription_id:id,amount:25,key:id,occurred_at:"2026-10-13T16:00:00Z",note:"Nakit"};
+  expect(paymentsOperation.parse({...p,method:"cash"})).toMatchObject({method:"cash"});
+  expect(paymentsOperation.parse(p)).toMatchObject({method:"manual"});
+  expect(paymentsOperation.safeParse({...p,method:"online"}).success).toBe(false);
+ });
  it("requires outcomes to specify a participant and explanation",()=>{
   expect(lessonOperation.safeParse({action:"no_show",lesson_id:id,member_id:id,note:"Gelmedi"}).success).toBe(true);
   expect(lessonOperation.safeParse({action:"no_show",lesson_id:id,note:"Gelmedi"}).success).toBe(false);

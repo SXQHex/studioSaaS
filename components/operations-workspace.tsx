@@ -23,8 +23,8 @@ const definitions:Record<string,Record<string,Field[]>> = {
  unenroll:[select("group_id","Grup","groups"),select("member_id","Öğrenci","members")],
  },
  payments:{
- collect:[select("subscription_id","Paket","subscriptions"),{key:"amount",label:"Tahsilat tutarı (TL)",kind:"number"},when("occurred_at","Tahsilat tarihi"),baseNote],
- refund:[select("subscription_id","Paket","subscriptions"),{key:"amount",label:"İade tutarı (TL)",kind:"number"},when("occurred_at","İade tarihi"),baseNote],
+ collect:[select("subscription_id","Paket","subscriptions"),{key:"amount",label:"Tahsilat tutarı (TL)",kind:"number"},when("occurred_at","Tahsilat tarihi"),{...select("method","Ödeme yöntemi","methods"),value:"cash"},baseNote],
+ refund:[select("subscription_id","Paket","subscriptions"),{key:"amount",label:"İade tutarı (TL)",kind:"number"},when("occurred_at","İade tarihi"),{...select("method","Ödeme yöntemi","methods"),value:"cash"},baseNote],
  reverse:[select("subscription_id","Paket","subscriptions"),select("entry_id","Düzeltilecek işlem","payments"),when("occurred_at","Düzeltme tarihi"),baseNote],
  },
  "lesson-operations":{
@@ -51,7 +51,7 @@ const descriptions:Record<string,string> = {
 };
 const sectionColumns:Record<string,string[]> = {
  waitlist:["group","member","status","created_at"],groups:["name","capacity","enrolled"],enrollments:["group","member"],lessons:["title","group","starts_at","ends_at","status","enrolled","capacity"],
- subscriptions:["label","amount","paid","balance","payment_status"],payments:["member","amount","kind","occurred_at","note","actor"],
+ subscriptions:["label","amount","paid","balance","payment_status"],payments:["member","amount","method","kind","occurred_at","note","actor"],
  leads:["full_name","email","phone","source","interests","stage","trial_at","converted_at"],tasks:["lead","title","due_at","completed_at"],
  outcomes:["title","member","outcome","note","created_at"],changes:["title","action","note","old_starts_at","new_starts_at","created_at"],policies:["cancellation_hours"],
 };
@@ -67,6 +67,7 @@ export function OperationsWorkspace({module,title,data,manager,instructor,loadEr
  const fields=all[action]??[];
  function value(field:Field){return values[field.key]??field.value??"";}
  function options(field:Field) {
+   if(field.dataset==="methods")return [{id:"cash",label:"Nakit"},{id:"manual",label:"Diğer manuel ödeme"}];
    if(field.dataset==="stages")return ["new","contacted","trial","followup","lost"].map(id=>({id,label:({new:"Yeni",contacted:"İletişim kuruldu",trial:"Deneme dersi",followup:"Takip",lost:"Kapandı"} as Record<string,string>)[id]}));
    return (data[field.dataset??""]??[]).filter(item=>{
     if(["rooms","instructors"].includes(field.dataset??"") && values.center_id)return item.center_id===values.center_id;

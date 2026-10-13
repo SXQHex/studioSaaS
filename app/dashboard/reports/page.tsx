@@ -5,7 +5,7 @@ import { reportRange } from "@/lib/validation/operations";
 type Row=Record<string,unknown>;
 type Report=Record<string,Row[]>;
 const definitions:Record<string,{title:string;columns:string[]}> = {
- payments:{title:"Tahsilat, iade ve düzeltme",columns:["member","amount","kind","occurred_at","note"]},
+ payments:{title:"Tahsilat, iade ve düzeltme",columns:["member","amount","method","kind","occurred_at","note"]},
  balances:{title:"Dönem sonu borç",columns:["member","amount","paid","balance","status","credits_remaining"]},
  renewals:{title:"Yenileme adayları",columns:["member","ends_on","credits_remaining"]},
  lessons:{title:"Ders doluluğu",columns:["title","starts_at","status","capacity","enrolled","attended"]},

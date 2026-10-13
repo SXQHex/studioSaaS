@@ -50,7 +50,7 @@ Bunlar tamamlanmış modüller olarak gösterilmez. Listenin 10. maddesindeki �
 
 ## İzole doğrulama
 
-66 unit/SSR testi. Sentetik kullanıcı ve iki merkezli SQL kontratları: tekrar/seri rollback, kontenjan, merkezler arası ret, kısmi ödeme/retry/refund, yanlış grup kredi tüketimini engelleme, iptal iadesi, erken iptal, hatırlatma dedupe, CRM rol izolasyonu/aynı üyeye dönüşüm, 1.003 satırın eksiksiz raporu, bekleme listesi terfi/rollback. TypeScript, lint ve production build kontrol edilir. CI tüm ileri migration'ları temiz Supabase veritabanında sırayla uygulayıp test eder. Üretimde test üyesi/işlemi oluşturulmaz.
+67 unit/SSR testi. Sentetik kullanıcı ve iki merkezli SQL kontratları: tekrar/seri rollback, kontenjan, merkezler arası ret, kısmi ödeme/retry/refund, yanlış grup kredi tüketimini engelleme, iptal iadesi, erken iptal, hatırlatma dedupe, CRM rol izolasyonu/aynı üyeye dönüşüm, 1.003 satırın eksiksiz raporu, bekleme listesi terfi/rollback. TypeScript, lint ve production build kontrol edilir. CI tüm ileri migration'ları temiz Supabase veritabanında sırayla uygulayıp test eder. Üretimde test üyesi/işlemi oluşturulmaz.
 
 ## Açık gerçek kabul listesi
 
@@ -65,3 +65,20 @@ Bunlar tamamlanmış modüller olarak gösterilmez. Listenin 10. maddesindeki �
 10: bekleme listesi kullanım testi; diğer ek modüllerin ihtiyaç kararı.
 
 Gerçek kabul kullanıcı talimatıyla açık kalır; kalıcı test hesaplarının şifreleri değiştirilmez.
+
+
+## Recovery düzeltmeleri — 14.10.2026
+
+Kod ve canlı veritabanı durumu ayrı takip edilir. Eksik 4–9/bekleme listesi şeması canlıya atomik recovery migration'ıyla uygulandı; kaynak eşlemesi recovery-database-rollout.md içindedir.
+
+- İç kredi/trigger fonksiyonlarının genel çalıştırma yetkisi kaldırıldı.
+- Grup kredisi yalnızca gerçek katılımcı/gelmeme kayıtları için tüketilir.
+- Yoklamada gelmeme yeni kredi kuralına bağlandı; kayıtlı olmayan grup öğrencisi ve iptal/gelmeme sonrası çelişkili katılım reddedilir.
+- Dersin yalnızca bitiş saatinin değişmesi de bildirim oluşturur.
+- Tahsilat yöntemi (cash/manual), ters kayıtta yöntemin korunması ve işlem anahtarı tutarlılığı eklendi.
+- Öğrenci kendi ödenen/kalan tutarlarını görür; yalnızca paket sahibi kendi mali özetine erişir.
+- CRM dönüşümleri merkez bazında kilitlenerek farklı iletişim anahtarlarıyla eşzamanlı dönüşüm yarışları sınırlandı.
+- Recovery dalına push CI'ı tetikler. Vercel ve yetkilendirme belgeleri güncellendi.
+- Yeni SQL kontratları bitiş saati bildirimi, gerçek yoklama/gelmeme, kredi iadesi, telafi/erteleme, ödeme yöntemi ve kişisel borç yalıtımını doğrular.
+
+Gerçek oturumlu UI kabulü, e-posta teslimi ve canlı zamanlanmış bildirimin çalışması açık kalır. Kalıcı hesaplar ve QA üyesi korunur. Şifreler değiştirilmez. İhtiyaç belirtilmeyen ek modüller tamamlandı sayılmaz.

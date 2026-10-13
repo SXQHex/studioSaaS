@@ -8,7 +8,7 @@ export const groupsOperation = z.discriminatedUnion("action", [
  z.object({ action:z.literal("promote"),group_id:id }),
 ]);
 export const paymentsOperation = z.discriminatedUnion("action", [
- z.object({ action:z.enum(["collect","refund"]),subscription_id:id,amount:z.number().positive().max(9999999999).refine(n=>Math.abs(n*100-Math.round(n*100))<0.000001,"En fazla iki ondalık kullanın."),key:id,occurred_at:time,note }),
+ z.object({ action:z.enum(["collect","refund"]),subscription_id:id,method:z.enum(["cash","manual"]).default("manual"),amount:z.number().positive().max(9999999999).refine(n=>Math.abs(n*100-Math.round(n*100))<0.000001,"En fazla iki ondalık kullanın."),key:id,occurred_at:time,note }),
  z.object({ action:z.literal("reverse"),subscription_id:id,entry_id:id,key:id,occurred_at:time,note }),
 ]);
 export const lessonOperation = z.discriminatedUnion("action", [

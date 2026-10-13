@@ -24,13 +24,14 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
   const todayParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
   const datePart = (type: string) => todayParts.find((p) => p.type === type)?.value ?? "";
   const today = `${datePart("year")}-${datePart("month")}-${datePart("day")}`;
-  const [subscriptionsResult, attendanceResult, creditsResult, enrollmentsResult] = await Promise.all([
+  const [subscriptionsResult, attendanceResult, creditsResult, enrollmentsResult, balancesResult] = await Promise.all([
     supabase.from("subscriptions").select("id, type, status, starts_on, ends_on, credits_purchased, credits_remaining, payment_status").in("member_id", linkedIds).order("starts_on", { ascending: false }).limit(20),
     supabase.from("attendance").select("id, lesson_id, attended, checked_in_at, notes").in("member_id", linkedIds).order("checked_in_at", { ascending: false }).limit(12),
     supabase.from("credit_transactions").select("id, amount, reason, note, created_at, lesson_id").in("member_id", linkedIds).order("created_at", { ascending: false }).limit(12),
     supabase.from("lesson_enrollments").select("lesson_id, center_id, member_id").in("member_id", linkedIds),
+    supabase.rpc("my_payment_balances"),
   ]);
-  const loadError = Boolean(subscriptionsResult.error || attendanceResult.error || creditsResult.error || enrollmentsResult.error);
+  const loadError = Boolean(subscriptionsResult.error || attendanceResult.error || creditsResult.error || enrollmentsResult.error || balancesResult.error || cancellations === null);
   const enrolledLessonIds = [...new Set((enrollmentsResult.data ?? []).map((row) => row.lesson_id))];
   const attendance = attendanceResult.data ?? [];
   const lessonIds = [...new Set(attendance.map((row) => row.lesson_id))];
@@ -43,6 +44,8 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
   for (const lesson of [...(upcomingPrivate.data ?? []), ...(upcomingGroup.data ?? [])]) if (!cancelledIds.has(lesson.id)) upcomingMap.set(lesson.id, lesson);
   const upcoming = [...upcomingMap.values()].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).slice(0, 8);
   const lessonMap = new Map((historyLessons.data ?? []).map((lesson) => [lesson.id, lesson]));
+  const balances = new Map((balancesResult.data ?? []).map(row=>[row.subscription_id,row]));
+  const money = (value: number) => new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY"}).format(value);
   const allSubscriptions = subscriptionsResult.data ?? [];
   const subscriptions = allSubscriptions.filter((item) => item.status === "active" && item.starts_on <= today && (!item.ends_on || item.ends_on >= today));
   const credits = subscriptions.reduce((sum, item) => sum + item.credits_remaining, 0);
@@ -56,7 +59,7 @@ export async function StudentHome({ supabase, profileId, fullName }: { supabase:
       <article className="metric-card"><div className="metric-top"><span>Yaklaşan ders</span><span className="metric-icon"><CalendarDays size={19} /></span></div><strong className="metric-value">{upcoming.length}</strong><p>Planlanmış ve kayıtlı gelecek dersler</p></article>
     </div>
     <section className="overview-panel"><div className="panel-heading"><div><h2>Aboneliklerim</h2><p>Aktif ve geçmiş paketler, kredi ve ödeme durumu</p></div><CreditCard className="panel-icon" size={19} /></div>
-      {allSubscriptions.length ? <div className="student-list">{allSubscriptions.map((item) => <div className="student-list-row" key={item.id}><div><strong>{item.type === "group_4_weeks" ? "4 haftalık grup paketi" : "Özel ders kredi paketi"}</strong><small>{dateOnly(item.starts_on)} başlangıç{item.ends_on ? " · " + dateOnly(item.ends_on) + " bitiş" : " · Bitiş tarihi yok"} · {item.status === "active" ? "Aktif" : item.status === "expired" ? "Süresi doldu" : "İptal"} · {item.payment_status === "paid" ? "Ödendi" : item.payment_status === "refunded" ? "İade edildi" : "Ödeme bekliyor"}</small></div><span className="student-credit-pill">{item.credits_remaining} / {item.credits_purchased} kredi</span></div>)}</div> : <div className="student-empty">Hesabınıza bağlı abonelik bulunmuyor. Paket durumunuzu stüdyo yöneticisiyle kontrol edin.</div>}
+      {allSubscriptions.length ? <div className="student-list">{allSubscriptions.map((item) => <div className="student-list-row" key={item.id}><div><strong>{item.type === "group_4_weeks" ? "4 haftalık grup paketi" : "Özel ders kredi paketi"}</strong><small>{dateOnly(item.starts_on)} başlangıç{item.ends_on ? " · " + dateOnly(item.ends_on) + " bitiş" : " · Bitiş tarihi yok"} · {item.status === "active" ? "Aktif" : item.status === "expired" ? "Süresi doldu" : "İptal"} · {item.payment_status === "paid" ? "Ödendi" : item.payment_status === "refunded" ? "İade edildi" : "Ödeme bekliyor"}</small>{balances.has(item.id) && <small>Ödenen: {money(Number(balances.get(item.id)?.paid ?? 0))} · Kalan borç: {money(Number(balances.get(item.id)?.balance ?? 0))}</small>}</div><span className="student-credit-pill">{item.credits_remaining} / {item.credits_purchased} kredi</span></div>)}</div> : <div className="student-empty">Hesabınıza bağlı abonelik bulunmuyor. Paket durumunuzu stüdyo yöneticisiyle kontrol edin.</div>}
     </section>
     <section className="overview-panel"><div className="panel-heading"><div><h2>Yaklaşan dersler</h2><p>Önümüzdeki planlanmış seanslar</p></div><CalendarDays className="panel-icon" size={19} /></div>
       {upcoming.length ? <div className="student-list">{upcoming.map((lesson) => <div className="student-list-row" key={lesson.id}><div><strong>{lesson.title}</strong><small>{dateTime(lesson.starts_at)}{lesson.ends_at ? " – " + studioTime(lesson.ends_at) : ""}</small></div><span className="type-pill">{lesson.type === "private" ? "Özel ders" : "Grup dersi"}</span></div>)}</div> : <div className="student-empty">Yaklaşan ders kaydı bulunmuyor.</div>}
