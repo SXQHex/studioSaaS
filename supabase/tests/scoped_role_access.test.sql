@@ -53,5 +53,41 @@ begin
  end if;
 end;
 $assert$;
+-- Negative tests for unauthorized writes and role escalation.
+set local role authenticated;
+do $deny$
+begin
+  perform set_config('request.jwt.claim.sub','91000000-0000-0000-0000-000000000003',true);
+  begin
+    insert into public.center_role_assignments(center_id,profile_id,role)
+      values('93000000-0000-0000-0000-000000000001',
+             '91000000-0000-0000-0000-000000000003','admin');
+    raise exception 'student self-escalated by inserting center role';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.assign_center_role(
+      '93000000-0000-0000-0000-000000000001',
+      '91000000-0000-0000-0000-000000000003','admin');
+    raise exception 'student self-escalated through assignment RPC';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub','91000000-0000-0000-0000-000000000002',true);
+  begin
+    perform public.assign_center_role(
+      '93000000-0000-0000-0000-000000000002',
+      '91000000-0000-0000-0000-000000000002','admin');
+    raise exception 'center A admin escalated to center B';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into public.members(center_id,full_name)
+       values('93000000-0000-0000-0000-000000000002','Cross-center injection');
+    raise exception 'center A admin wrote members of center B';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$deny$;
 reset role;
 rollback;
