@@ -128,4 +128,23 @@ do $$declare r jsonb;row jsonb;begin
  if (select status from public.studio_email_outbox where id=(row->>'id')::uuid)<>'delivered' or (select count(*) from public.studio_email_events where event_id='event-pilot')<>1 then raise exception 'Receipt not idempotent';end if;
 end;$$;
 reset role;
+
+-- A complaint/bounce suppresses queued and manually retried messages too.
+insert into public.notifications(recipient_id,organization_id,center_id,type,title,body,href,dedupe_key)
+values('b1000000-0000-4000-8000-000000000004','b2000000-0000-4000-8000-000000000001','b3000000-0000-4000-8000-000000000001','studio_lesson_changed','Queued before bounce','Changed','/dashboard/my-learning','pilot-suppression');
+set local role service_role;
+select public.studio_email_event('event-bounce','provider-pilot','email.bounced',now());
+do $$begin
+ if jsonb_array_length(public.claim_studio_emails(array['b3000000-0000-4000-8000-000000000001'::uuid]))<>0 then raise exception 'Suppressed queued email claimed';end if;
+end;$$;
+reset role;
+set local role authenticated;
+do $$declare rec uuid;denied boolean:=false;begin
+ perform set_config('request.jwt.claim.sub','b1000000-0000-4000-8000-000000000001',true);
+ select o.id into rec from public.studio_email_outbox o join public.notifications n on n.id=o.notification_id where n.dedupe_key='pilot-suppression';
+ begin perform public.retry_studio_email(rec);exception when others then denied:=true;end;
+ if not denied then raise exception 'Manager bypassed suppression';end if;
+end;$$;
+reset role;
+
 rollback;
