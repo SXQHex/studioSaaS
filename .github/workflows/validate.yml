@@ -25,6 +25,8 @@ jobs:
           node-version-file: .nvmrc
       - name: Install dependencies
         run: npm ci
+      - name: Validate Vercel pnpm lockfile
+        run: npx --yes pnpm@10.17.1 install --lockfile-only --frozen-lockfile --ignore-scripts
       - name: Audit dependencies
         run: npm audit --audit-level=high
       - name: Check formatting
