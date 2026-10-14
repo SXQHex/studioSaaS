@@ -25,10 +25,23 @@ export const checkpoints = {
   20261014051755: ["supabase/tests/dry_simplification.test.sql"],
 };
 
+export function databaseEnvironment(connectionString) {
+  const connection = new URL(connectionString);
+  if (!["postgres:", "postgresql:"].includes(connection.protocol))
+    throw new Error("A PostgreSQL connection URL is required");
+  return {
+    PGHOST: connection.hostname,
+    PGPORT: connection.port || "5432",
+    PGUSER: decodeURIComponent(connection.username),
+    PGPASSWORD: decodeURIComponent(connection.password),
+    PGDATABASE: decodeURIComponent(connection.pathname.slice(1)),
+    PGSSLMODE: connection.searchParams.get("sslmode") || "prefer",
+  };
+}
 function apply(file) {
   const result = spawnSync("psql", ["-v", "ON_ERROR_STOP=1", "-f", file], {
     stdio: "inherit",
-    env: { ...process.env, PGDATABASE: process.env.DB_URL },
+    env: { ...process.env, ...databaseEnvironment(process.env.DB_URL) },
   });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);

@@ -107,3 +107,18 @@ describe("workspace list entry point", () => {
     expect(result.ok).toBe(false);
   });
 });
+
+import { databaseEnvironment } from "../scripts/verify-database.mjs";
+describe("isolated PostgreSQL connection", () => {
+  it("passes the connection host and port rather than connecting to the runner socket", () => {
+    const env = databaseEnvironment(
+      "postgresql://postgres:test%21@127.0.0.1:54322/postgres?sslmode=disable",
+    );
+    expect(env.PGHOST).toBe("127.0.0.1");
+    expect(env.PGPORT).toBe("54322");
+    expect(env.PGDATABASE).toBe("postgres");
+    expect(env.PGUSER).toBe("postgres");
+    expect(env.PGPASSWORD).toBe("test!");
+    expect(env.PGSSLMODE).toBe("disable");
+  });
+});
