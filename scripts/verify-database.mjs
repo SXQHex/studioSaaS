@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 
 // Tests run at their original schema checkpoint, before later cutovers replace it.
 export const checkpoints = {
+  20261014172613: ["supabase/tests/manual_overpayments.test.sql"],
   20261012180000: [
     "supabase/tests/security_privileges.test.sql",
     "supabase/tests/center_isolation.test.sql",

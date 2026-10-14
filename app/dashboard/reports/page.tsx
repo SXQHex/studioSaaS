@@ -1,3 +1,4 @@
+import { paymentBalanceRow } from "@/lib/payment-balance";
 import Link from "next/link";
 import { requireRole } from "@/lib/supabase/access";
 import { OperationsTable } from "@/components/operations-table";
@@ -10,12 +11,13 @@ const definitions: Record<string, { title: string; columns: string[] }> = {
     columns: ["member", "amount", "method", "kind", "occurred_at", "note"],
   },
   balances: {
-    title: "Dönem sonu borç",
+    title: "Dönem sonu borç ve müşteri alacağı",
     columns: [
       "member",
       "amount",
       "paid",
       "balance",
+      "credit_balance",
       "status",
       "credits_remaining",
     ],
@@ -81,11 +83,13 @@ export default async function Page({
   ) as Report;
   const sum = (rows: Row[] | undefined, key: string) =>
     rows?.reduce((n, row) => n + Number(row[key] ?? 0), 0) ?? 0;
+  const balances = (report.balances ?? []).map(paymentBalanceRow);
   const crm = report.crm ?? [];
   const converted = crm.filter((row) => row.stage === "converted").length;
   const metrics = [
     ["Net tahsilat (TL)", sum(report.payments, "amount")],
-    ["Dönem sonu borç (TL)", sum(report.balances, "balance")],
+    ["Dönem sonu borç (TL)", sum(balances, "balance")],
+    ["Müşteri alacağı (TL)", sum(balances, "credit_balance")],
     ["Yenileme adayı", report.renewals?.length ?? 0],
     [
       "CRM dönüşümü",

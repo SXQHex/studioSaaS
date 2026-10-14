@@ -1,3 +1,4 @@
+import { paymentBalanceRow } from "@/lib/payment-balance";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/supabase/access";
 import { reportRange } from "@/lib/validation/operations";
@@ -35,18 +36,24 @@ export async function GET(request: NextRequest) {
       { error: "Rapor oluşturulamadı." },
       { status: 503 },
     );
-  return new NextResponse(toCsv(rows as Record<string, unknown>[]), {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition":
-        'attachment; filename="' +
-        dataset +
-        "-" +
-        parsed.data.from +
-        "-" +
-        parsed.data.to +
-        '.csv"',
-      "Cache-Control": "private, no-store",
+  const exportRows = rows as Record<string, unknown>[];
+  return new NextResponse(
+    toCsv(
+      dataset === "balances" ? exportRows.map(paymentBalanceRow) : exportRows,
+    ),
+    {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition":
+          'attachment; filename="' +
+          dataset +
+          "-" +
+          parsed.data.from +
+          "-" +
+          parsed.data.to +
+          '.csv"',
+        "Cache-Control": "private, no-store",
+      },
     },
-  });
+  );
 }
