@@ -1,6 +1,7 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 
-const uuid = z.string().uuid();
+const uuid = databaseId();
 const label = z.string().trim().min(1).max(160);
 
 export const sessionRequestSchema = z

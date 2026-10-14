@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import {
   isWorkspaceModule,
@@ -19,7 +20,7 @@ export const requestSchema = z.object({
   filters: z
     .record(z.string().regex(/^[a-z_]{1,60}$/), z.string().max(200))
     .default({}),
-  selected: z.string().uuid().nullable().default(null),
+  selected: databaseId().nullable().default(null),
 });
 export async function listWorkspaceSection(
   context: BackendContext,

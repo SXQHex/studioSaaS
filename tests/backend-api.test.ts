@@ -145,6 +145,35 @@ describe("frontend-independent Edge API", () => {
       p_data: expect.objectContaining({ key, method: "manual" }),
     });
   });
+  it("creates a catalog package with a legacy PostgreSQL center ID", async () => {
+    rpc.mockClear();
+    rpc.mockResolvedValueOnce({ data: { id: "package" }, error: null });
+    const input = {
+      action: "create",
+      center_id: "00000000-0000-0000-0000-000000000102",
+      name: "4 ders",
+      lesson_type: "private",
+      credits: 4,
+      price: 1000,
+      validity_days: 90,
+      freeze_days: 0,
+      freeze_count: 0,
+    };
+    const response = await createBackendHandler(config, async () =>
+      context(["admin"]),
+    )(
+      request("commands/catalog.command", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(input),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith("roadmap_command", {
+      p_module: "catalog",
+      p_data: input,
+    });
+  });
   it("rejects invalid financial input before the transaction", async () => {
     rpc.mockClear();
     const response = await createBackendHandler(config, async () =>

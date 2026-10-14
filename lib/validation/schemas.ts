@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 
 /** Trimmed text where an empty string becomes `null`. */
@@ -8,7 +9,7 @@ const optionalText = (max: number, label: string) =>
     .max(max, `${label} en fazla ${max} karakter olabilir.`)
     .transform((value) => (value === "" ? null : value));
 
-const uuid = (message: string) => z.string().uuid(message);
+const uuid = (message: string) => databaseId(message);
 const isoDateTime = z
   .string()
   .refine(
