@@ -77,6 +77,7 @@ jobs:
           mv supabase/migrations/20261014005928_policy_revision_snapshots.sql /tmp/20261014005928_policy_revision_snapshots.sql
           mv supabase/migrations/20261014010043_policy_reset_revision.sql /tmp/20261014010043_policy_reset_revision.sql
           mv supabase/migrations/20261014024406_priority_roadmap.sql /tmp/20261014024406_priority_roadmap.sql
+          mv supabase/migrations/20261014031416_email_vault_webhook.sql /tmp/20261014031416_email_vault_webhook.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -142,6 +143,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261014010043_policy_reset_revision.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/organization_center_policies.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261014024406_priority_roadmap.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261014031416_email_vault_webhook.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/priority_roadmap.test.sql
       - name: Measure representative query plans
         shell: bash

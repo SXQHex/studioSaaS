@@ -2,9 +2,11 @@ import {createClient} from "npm:@supabase/supabase-js@2.117.3";
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json"}});
 Deno.serve(async(req:Request)=>{
  if(req.method!=="POST")return json({ok:false},405);
- const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),api=Deno.env.get("RESEND_API_KEY");
- if(!url||!key||!api)return json({ok:false,error:"not_configured"},503);
+ const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+ if(!url||!key)return json({ok:false,error:"not_configured"},503);
  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+ const config=await db.rpc("studio_email_credentials");
+ const api=Deno.env.get("RESEND_API_KEY")??config.data?.api_key;if(!api)return json({ok:false,error:"not_configured"},503);
  let centers:string[]|null=null;
  const token=req.headers.get("x-studio-worker-token");
  if(token){
@@ -17,7 +19,7 @@ Deno.serve(async(req:Request)=>{
  }
  // Reconcile with provider status as a fallback when webhook configuration is unavailable.
  const receipts=await db.rpc("pending_email_receipts",{p_centers:centers});
- for(const row of (receipts.data??[]).slice(0,10)){
+ for(const row of (Deno.env.get("RESEND_API_KEY")?(receipts.data??[]):[]).slice(0,10)){
  try{
  const response=await fetch("https://api.resend.com/emails/"+encodeURIComponent(row.provider_id),{headers:{Authorization:"Bearer "+api},signal:AbortSignal.timeout(10000)});
  if(response.ok){const result=await response.json();const event=String(result.last_event??"");
