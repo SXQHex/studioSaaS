@@ -1029,6 +1029,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+ my_subscription_terms: {Args: Record<PropertyKey, never>;Returns: Json};
+ roadmap_workspace: { Args: {p_module:string;p_from?:string;p_to?:string}; Returns: Json };
+ roadmap_command: { Args: {p_module:string;p_data:Json}; Returns: Json };
       policy_workspace: { Args: Record<PropertyKey, never>; Returns: Json }
       policy_command: { Args: { p_data: Json }; Returns: Json }
       policy_cancel_exception: { Args: { p_data: Json }; Returns: Json }

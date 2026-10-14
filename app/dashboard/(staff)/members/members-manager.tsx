@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { Check, CirclePlus, Edit2, Link2, Unlink2, Mail, Phone, UserRound, UserRoundX, X } from "lucide-react";
 import { ListFilters } from "@/components/list-filters";
@@ -210,7 +211,7 @@ export function MembersManager({
                       {member.profile_id
                         ? <button className="icon-button" type="button" disabled={busy || pendingId === member.id} onClick={() => void disconnectAccount(member)} aria-label={member.full_name + " giriş hesabı bağlantısını kaldır"} title="Hesap bağlantısını kaldır"><Unlink2 size={16} /></button>
                         : <button className="icon-button" type="button" onClick={() => startAccountLink(member)} aria-label={member.full_name + " giriş hesabını bağla"} title="Giriş hesabı bağla"><Link2 size={16} /></button>}
-                      <button className="icon-button" type="button" onClick={() => startEdit(member)} aria-label={`${member.full_name} bilgilerini düzenle`}><Edit2 size={16} /></button><button className="icon-button" type="button" disabled={pendingId === member.id} onClick={() => void toggleActive(member)} aria-label={member.is_active ? "Üyeyi pasife al" : "Üyeyi aktifleştir"}>{member.is_active ? <UserRoundX size={16} /> : <Check size={16} />}</button></div></td>
+                      <Link className="text-action" href={"/dashboard/payments?action=collect&member_id="+member.id}>Tahsilat</Link><Link className="text-action" href={"/dashboard/catalog?member_id="+member.id}>Paket</Link><button className="icon-button" type="button" onClick={() => startEdit(member)} aria-label={`${member.full_name} bilgilerini düzenle`}><Edit2 size={16} /></button><button className="icon-button" type="button" disabled={pendingId === member.id} onClick={() => void toggleActive(member)} aria-label={member.is_active ? "Üyeyi pasife al" : "Üyeyi aktifleştir"}>{member.is_active ? <UserRoundX size={16} /> : <Check size={16} />}</button></div></td>
                   </tr>
                 ))}
               </tbody>

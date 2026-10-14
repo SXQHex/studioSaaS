@@ -140,10 +140,10 @@ export async function createGroupProposal(input: unknown): Promise<ActionResult>
     p_instructor_id: instructor.data.instructor_id,
   });
   if (error || !requestId) return fail(dbErrorMessage(error, "Grup dersi taslağı oluşturulamadı."));
-  const emailDelivered = await sendSessionRequestEmail(supabase, requestId, "created");
+  const emailQueued = await sendSessionRequestEmail(supabase, requestId, "created");
   refresh();
-  return ok(emailDelivered
-    ? "Grup dersi taslağı oluşturuldu ve eğitmene e-posta gönderildi."
+  return ok(emailQueued
+    ? "Grup dersi taslağı oluşturuldu ve eğitmen için e-posta kuyruğa alındı."
     : "Grup dersi taslağı oluşturuldu. Uygulama içi bildirim kaydedildi; e-posta ayarını kontrol edin.");
 }
 
@@ -164,10 +164,10 @@ export async function createSessionRequest(input: unknown): Promise<ActionResult
     p_instructor_id: null,
   });
   if (error || !data) return fail(dbErrorMessage(error, "Seans talebi oluşturulamadı."));
-  const emailDelivered = await sendSessionRequestEmail(supabase, data, "created");
+  const emailQueued = await sendSessionRequestEmail(supabase, data, "created");
   refresh();
-  return ok(emailDelivered
-    ? "Talep yöneticiye iletildi; merkez yöneticilerine e-posta gönderildi."
+  return ok(emailQueued
+    ? "Talep yöneticiye iletildi; merkez yöneticileri için e-posta kuyruğa alındı."
     : "Talep kaydedildi. Uygulama içi bildirim hazır; e-posta gönderimini kontrol edin.");
 }
 
@@ -181,15 +181,15 @@ export async function reviewSessionRequest(input: unknown): Promise<ActionResult
     p_review_note: parsed.data.note,
   });
   if (error) return fail(dbErrorMessage(error, "Talep değerlendirilemedi. Oda veya eğitmen çakışmasını kontrol edin."));
-  const emailDelivered = await sendSessionRequestEmail(
+  const emailQueued = await sendSessionRequestEmail(
     supabase,
     parsed.data.id,
     parsed.data.approve ? "approved" : "rejected",
   );
   refresh();
   const resultMessage = parsed.data.approve ? "Talep onaylandı ve seans rezerve edildi." : "Talep reddedildi.";
-  return ok(emailDelivered
-    ? resultMessage + " Talep sahibi ve eğitmene e-posta gönderildi."
+  return ok(emailQueued
+    ? resultMessage + " Talep sahibi ve eğitmen için e-posta kuyruğa alındı."
     : resultMessage + " Uygulama içi bildirim kaydedildi; e-posta gönderimini kontrol edin.");
 }
 
