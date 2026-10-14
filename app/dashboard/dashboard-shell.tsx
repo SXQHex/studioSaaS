@@ -46,6 +46,7 @@ const navigation = [
   { href: "/dashboard/crm", label: "Pazarlama CRM", icon: Users },
   { href: "/dashboard/notifications", label: "Bildirimler", icon: Bell },
   { href: "/dashboard/account", label: "Hesap ve güvenlik", icon: UserCircle2 },
+  { href: "/dashboard/settings", label: "Organizasyon / merkez ayarları", icon: ShieldCheck },
   { href: "/dashboard/reports", label: "Raporlama", icon: BarChart3 },
 ];
 

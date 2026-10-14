@@ -33,7 +33,7 @@ const definitions:Record<string,Record<string,Field[]>> = {
  cancel:[select("lesson_id","Ders","lessons"),baseNote],
  reschedule:[select("lesson_id","Ders","lessons"),when("starts_at","Yeni başlangıç"),when("ends_at","Yeni bitiş"),baseNote],
  makeup:[select("lesson_id","İptal / ertelenen ders","lessons"),when("starts_at","Telafi başlangıcı"),when("ends_at","Telafi bitişi"),baseNote],
- policy:[select("center_id","Merkez","centers"),{key:"hours",label:"Ücretsiz iptal için en az kaç saat önce?",kind:"number",value:"24"}],
+
  },
  crm:{
  create:[select("center_id","Merkez","centers"),text("full_name","Ad soyad"),{key:"email",label:"E-posta",kind:"email",optional:true},text("phone","Telefon",true),text("source","Kaynak"),text("interests","İlgi alanları",true),{key:"notes",label:"Notlar",kind:"textarea",optional:true}],
@@ -46,7 +46,7 @@ const definitions:Record<string,Record<string,Field[]>> = {
 const descriptions:Record<string,string> = {
  groups:"Haftalık program kesin dersleri oluşturur. Tek bir çakışma varsa serinin tamamı geri alınır. Grup kaydı gelecek derslere aktarılır; geçmiş kayıtlar korunur.",
  payments:"Yalnızca manuel / nakit tahsilat. Kısmi ödeme kalan borcu azaltır. Hatalı işlem silinmez; ters kayıt veya iade girilir.",
- "lesson-operations":"Varsayılan ücretsiz iptal süresi 24 saattir; yönetici merkez bazında değiştirebilir. Geç iptal / gelmeme bir kredi tüketir. Eğitmen iptali krediyi bir kez iade eder. Telafi ayrı derstir.",
+ "lesson-operations":"İptal ve kredi kuralları organizasyon / merkez ayarlarından uygulanır. Özel ders için varsayılan ücretsiz iptal süresi 12 saattir; grup öğrenci iptalinde varsayılan iade yoktur. Eğitmen iptali ve telafi ayrı işlemlerdir.",
  crm:"Pazarlama ve aday müşteri takibi. Bu alan yalnızca merkez yöneticilerine açıktır. Üyeye dönüşüm mevcut e-posta / telefon eşleşmesini kullanır.",
 };
 const sectionColumns:Record<string,string[]> = {
@@ -111,10 +111,10 @@ export function OperationsWorkspace({module,title,data,manager,instructor,loadEr
     :field.kind==="textarea"?<textarea id={module+"-"+action+"-"+field.key} rows={3} maxLength={2000} value={value(field)} onChange={e=>change(field.key,e.target.value)}/>
     :<input id={module+"-"+action+"-"+field.key} required={!field.optional} type={field.kind??"text"} step={field.kind==="number"?"0.01":undefined} min={field.kind==="number"?0:undefined} maxLength={field.kind==="email"?320:field.kind?128:500} value={value(field)} disabled={busy} onChange={e=>change(field.key,e.target.value)}/>}
    </label>)}</div>
-   {module==="lesson-operations"&&values.lesson_id&&<p>Bu merkezde ücretsiz iptal sınırı: {String(data.lessons?.find(l=>l.id===values.lesson_id)?.cancellation_hours??24)} saat önce.</p>}
+   {module==="lesson-operations"&&values.lesson_id&&<p>Özel ders için bu merkezde ücretsiz iptal sınırı: {String(data.lessons?.find(l=>l.id===values.lesson_id)?.cancellation_hours??12)} saat önce.</p>}
    {error&&<p className="notice error" role="alert">{error}</p>}{success&&<p className="notice success" role="status">{success}</p>}
    <button className="primary-action" disabled={busy||loadError} type="submit">{busy?"Kaydediliyor…":labels[action]}</button>
   </form></section>
-  {Object.entries(data).filter(([name])=>sectionColumns[name]&&name!=="members").map(([name,rows])=><section className="table-card" key={name}><div className="table-toolbar"><div><h2>{sectionNames[name]}</h2><p>{rows.length} kayıt</p></div></div><OperationsTable rows={rows} columns={sectionColumns[name]}/></section>)}
+  {Object.entries(data).filter(([name])=>sectionColumns[name]&&name!=="members"&&name!=="policies").map(([name,rows])=><section className="table-card" key={name}><div className="table-toolbar"><div><h2>{sectionNames[name]}</h2><p>{rows.length} kayıt</p></div></div><OperationsTable rows={rows} columns={sectionColumns[name]}/></section>)}
  </div>;
 }

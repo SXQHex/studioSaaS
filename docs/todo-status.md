@@ -14,7 +14,7 @@ Mevcut GitHub deposu, Supabase backend ve Vercel dağıtım düzeni korunur.
 | 3 | Özel ders talep/onay | Uygulandı | Gerçek akış ve eşzamanlı onay kabulü açık |
 | 4 | Grup planlama/katılımcılar | Uygulandı | Gerçek program ve kontenjan kabulü açık |
 | 5 | Manuel tahsilat | Uygulandı | Kasa mutabakatı açık |
-| 6 | İptal/telafi/kredi | Uygulandı | Okul kuralı ve gerçek kredi mutabakatı açık |
+| 6 | İptal/telafi/kredi | Uygulandı | Gerçek kredi mutabakatı açık |
 | 7 | Bildirimler | Uygulandı; cron aktif | Zamanlanmış teslim ve dış e-posta kabulü açık |
 | 8 | Yönetici CRM | Uygulandı | Gerçek aday dönüşümü kabulü açık |
 | 9 | Raporlar | Uygulandı | Gerçek dönem mutabakatı açık |
@@ -68,14 +68,14 @@ Mevcut GitHub deposu, Supabase backend ve Vercel dağıtım düzeni korunur.
 ## 6. İptal, erteleme, telafi ve kredi
 
 - [x] Erken/geç öğrenci iptali, eğitmen iptali, gelmeme ve ayrı telafi.
-- [x] Varsayılan ücretsiz iptal 24 saat; yönetici merkezde 0–168 saat seçebilir.
+- [x] Varsayılan ücretsiz iptal yalnızca özel derste en az 12 saat öncedir; grup öğrenci iptalinde varsayılan kredi iadesi yoktur. Organizasyon/merkez politikaları uygulanır.
 - [x] Geç iptal/gelmeme bir kredi; eğitmen iptalinde tüketilmiş kredi bir kez iade.
 - [x] Grup tüketimi tüm merkez paketlerini dolaşmaz; yalnızca ilgili katılımcı ve sonuçlar işlenir.
 - [x] Gelmedi yoklaması kredi kuralına bağlı; grup yoklaması kayıtlı öğrenci gerektirir.
 - [x] İptal/gelmeme sonrası çelişkili katılım, iptal kimliğini yeniden açma ve çift kredi tüketimi engeli.
 - [x] İç kredi ve trigger fonksiyonları anon/authenticated tarafından doğrudan çalıştırılamaz.
 - [x] İzole tekrar, iade, telafi/erteleme ve öğrenci yalıtımı testleri.
-- [ ] Okulun iptal süresi kararı ve gerçek kredi mutabakatı.
+- [ ] Gerçek iptal/gelmeme/telafi ve kredi mutabakatı.
 
 ## 7. İşlemsel bildirimler
 
@@ -108,6 +108,21 @@ Mevcut GitHub deposu, Supabase backend ve Vercel dağıtım düzeni korunur.
 - [x] Bekleme listesi ve yöneticiyle sıradaki kaydı gruba alma.
 - [ ] Bekleme listesinin gerçek kullanım kabulü.
 - [ ] Öğrenci gelişimi, etkinlik/biletleme ve veli hesabı: gerçek ihtiyaç ve kapsam bekliyor; geliştirilmiş sayılmaz.
+
+## Organizasyon / merkez ayarları — 14.10.2026
+
+- [x] İptal/kredi, talep zamanları, paket geçerliliği, borçlu talep/kayıt/katılım ve bildirim zamanları için 15 ayar.
+- [x] Organizasyon sahibi zorunlu veya tavsiye seçebilir; sayısal tavsiyeler için alt/üst sınır tanımlar.
+- [x] Merkez yalnızca tavsiye değerini sınırlar içinde değiştirir; organizasyon varsayılanına dönebilir.
+- [x] Uygulanan değer ve kaynağı görünür; zorunluya dönüşen ayarda eski merkez tercihi saklanır ama uygulanmaz.
+- [x] Zorunlu kural normal işlemlerde organizasyon sahibini de bağlar.
+- [x] İptal/gelmeme istisnası yalnızca organizasyon sahibi/platform yöneticisinin ayrı, gerekçeli işlemiyle uygulanır; genel politikayı değiştirmez.
+- [x] Değişiklik geçmişi ve sürümler; iptal/gelmeme, yeni paket ve talep işlemlerinde kullanılan politika kaydı.
+- [x] Eski iptal ve paketler ayar değişikliğiyle yeniden hesaplanmaz.
+- [x] Oda/eğitmen çakışması, fiziksel kontenjan, çift kredi/tahsilat engeli ve veri erişimi ayarlanabilir değildir.
+- [x] Özel ders kesinleşmesi yönetici onayında kalır.
+- [x] Sunucu ve veritabanı kontrolleri; 72 unit/SSR testi ve politika SQL kontratı geçti.
+- [ ] Gerçek oturumda ayar ekranı, organizasyon zorunluluğu, merkez değişikliği/varsayılana dönüş ve istisna akışının kabulü.
 
 ## Teknik doğrulama ve dağıtım
 

@@ -73,6 +73,9 @@ jobs:
           mv supabase/migrations/20261013200611_studio_reports.sql /tmp/20261013200611_studio_reports.sql
           mv supabase/migrations/20261013201345_group_waitlist.sql /tmp/20261013201345_group_waitlist.sql
           mv supabase/migrations/20261013230735_recovery_consistency_fixes.sql /tmp/20261013230735_recovery_consistency_fixes.sql
+          mv supabase/migrations/20261014004641_organization_center_policies.sql /tmp/20261014004641_organization_center_policies.sql
+          mv supabase/migrations/20261014005928_policy_revision_snapshots.sql /tmp/20261014005928_policy_revision_snapshots.sql
+          mv supabase/migrations/20261014010043_policy_reset_revision.sql /tmp/20261014010043_policy_reset_revision.sql
           supabase start
       - name: Verify schema baseline and privilege migration on a clean database
         shell: bash
@@ -133,6 +136,10 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261013230735_recovery_consistency_fixes.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/roadmap.test.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/recovery_consistency.test.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261014004641_organization_center_policies.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261014005928_policy_revision_snapshots.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/20261014010043_policy_reset_revision.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/organization_center_policies.test.sql
       - name: Measure representative query plans
         shell: bash
         run: |

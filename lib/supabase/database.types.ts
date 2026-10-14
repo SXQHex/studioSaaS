@@ -1029,6 +1029,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      policy_workspace: { Args: Record<PropertyKey, never>; Returns: Json }
+      policy_command: { Args: { p_data: Json }; Returns: Json }
+      policy_cancel_exception: { Args: { p_data: Json }; Returns: Json }
+
       my_payment_balances: { Args: Record<PropertyKey, never>; Returns: { subscription_id: string; amount: number; paid: number; balance: number }[] }
 
       planned_group_usage: { Args: { p_request_ids: string[] }; Returns: {request_id:string;title:string;starts_at:string;ends_at:string}[] }

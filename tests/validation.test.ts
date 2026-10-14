@@ -72,8 +72,8 @@ describe("subscriptionSchema", () => {
     expect(parsed.ends_on).toBeNull();
   });
 
-  it("requires an end date on or after the start for private packages", () => {
-    expect(subscriptionSchema.safeParse({ ...base, ends_on: null }).success).toBe(false);
+  it("allows policy-derived expiry and rejects an end before the start", () => {
+    expect(subscriptionSchema.safeParse({ ...base, ends_on: null }).success).toBe(true);
     expect(subscriptionSchema.safeParse({ ...base, ends_on: "2026-10-01" }).success).toBe(false);
     expect(subscriptionSchema.safeParse(base).success).toBe(true);
   });

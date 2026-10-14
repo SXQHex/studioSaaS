@@ -29,7 +29,7 @@ Kullanıcı kararı: gerçek hesaplarla canlı kabul kontrolleri sona bırakıl�
 - Grup kayıtları yalnızca gelecek planlanmış derslere aktarılır/kaldırılır. Geçmiş yoklamalar korunur.
 - Tahsilat defteri istemciler için değişmez. Aynı işlem anahtarı tekrar ödeme oluşturmaz; aynı tahsilat bir kez ters çevrilebilir. İade net tahsilatı azaltır ve borcu artırır; paket/kredi durumu ayrıca yönetilir.
 - Eski `paid` paketler açıkça “önceki ödeme durumundan açılış” olarak aktarılır. Tarih yoksa önceki kayıt oluşturma tarihi kullanılır; yeni bir tahsilat yapıldığı iddia edilmez.
-- Ücretsiz öğrenci iptali varsayılan 24 saat öncedir, merkez yöneticisi 0–168 saat aralığında değiştirebilir. Erken grup iptali o dersteki yeri boşaltır; diğer haftalardaki grup kaydı sürer.
+- Ücretsiz öğrenci iptali yalnızca özel derste varsayılan 12 saat öncedir. Grup öğrenci iptalinde varsayılan iade yoktur. Etkin organizasyon/merkez politikası ve işlem sürümü uygulanır.
 - Geç öğrenci iptali ve gelmeme bir kredi kullanır. Öğrencinin özel ders iptali odayı serbest bırakır; geç iptal cezası iade edilmez.
 - Eğitmen/yönetici ders iptali kullanılan krediyi bir kez geri verir. İptal/ertelenmiş ders aynı kimlikle açılmaz; telafi ayrı kimliktir ve normal katılım kuralına göre kredi kullanır.
 - Grup dersi tamamlanırken merkezdeki tüm paketler dolaşılmaz: yalnızca katılımı olan veya geç iptal/gelmeme sonucu olan üye işlenir. Bir ders/üye için daha önce kredi tüketilmişse başka paket seçilerek ikinci kez tüketilmez.
@@ -82,3 +82,8 @@ Kod ve canlı veritabanı durumu ayrı takip edilir. Eksik 4–9/bekleme listesi
 - Yeni SQL kontratları bitiş saati bildirimi, gerçek yoklama/gelmeme, kredi iadesi, telafi/erteleme, ödeme yöntemi ve kişisel borç yalıtımını doğrular.
 
 Gerçek oturumlu UI kabulü, e-posta teslimi ve canlı zamanlanmış bildirimin çalışması açık kalır. Kalıcı hesaplar ve QA üyesi korunur. Şifreler değiştirilmez. İhtiyaç belirtilmeyen ek modüller tamamlandı sayılmaz.
+
+
+## Organizasyon / merkez politika ayarları — 14.10.2026
+
+15 ayar ve /dashboard/settings ekranı eklendi. Organizasyon zorunlu/tavsiye modu ve sayısal sınırlar; merkez tercihleri ve varsayılana dönüş; sürüm/değişiklik geçmişi ve gerekçeli iptal/gelmeme istisnası uygulanır. İş kuralları ayarlara bağlı çalışır. Paket ve iptal geçmişi geriye dönük değiştirilmez. Ayrıntılar: organization-center-policies.md. Gerçek ayar ekranı kabulü açık kalır.
