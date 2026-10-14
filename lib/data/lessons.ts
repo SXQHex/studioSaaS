@@ -1,4 +1,4 @@
-import type { ServerSupabase } from "@/lib/supabase/server";
+import type { BackendClient as ServerSupabase } from "@/lib/backend/context";
 import type { Tables } from "@/lib/supabase/database.types";
 import { pageRange } from "./pagination";
 

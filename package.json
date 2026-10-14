@@ -13,7 +13,10 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "format:check": "biome format app components lib tests scripts"
+    "format:check": "biome format app components lib tests scripts",
+    "build:edge": "node scripts/build-edge-api.mjs",
+    "check:edge": "node scripts/build-edge-api.mjs --check",
+    "test:edge": "node scripts/smoke-edge-api.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12",
@@ -25,15 +28,16 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@biomejs/biome": "2.5.15",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "rolldown": "1.2.13",
     "tailwindcss": "^4",
     "typescript": "^6",
-    "vitest": "^5.0.3",
-    "@playwright/test": "^1.56.1",
-    "@axe-core/playwright": "^4.10.2"
+    "vitest": "^5.0.3"
   }
 }

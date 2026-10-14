@@ -1135,6 +1135,7 @@
         "npm:next@16.4.0",
         "npm:react-dom@19.3.0",
         "npm:react@19.3.0",
+        "npm:rolldown@1.2.13",
         "npm:tailwindcss@4",
         "npm:typescript@6",
         "npm:vitest@^5.0.3",

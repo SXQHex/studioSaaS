@@ -29,6 +29,15 @@ jobs:
         run: npm audit --audit-level=high
       - name: Check formatting
         run: npm run format:check
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check shared Edge API bundle
+        run: |
+          npm run check:edge
+          deno check supabase/functions/studio-api/index.js
+          node scripts/smoke-edge-api.mjs
       - name: Lint
         run: npm run lint
       - name: Type check

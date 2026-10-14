@@ -1,14 +1,14 @@
-import type { ServerSupabase } from "@/lib/supabase/server";
+import type { BackendClient as ServerSupabase } from "@/lib/backend/context";
 import { studioDateKey } from "@/lib/studio-date";
 import { reportRange } from "@/lib/validation/operations";
 import {
-  workspaceDataSchema,
   insightsDataSchema,
   planningDataSchema,
-  workspacePageSchema,
-  workspaceSections,
   type WorkspaceModule,
   type WorkspacePages,
+  workspaceDataSchema,
+  workspacePageSchema,
+  workspaceSections,
 } from "@/lib/workspace";
 import type { SearchParams } from "./pagination";
 
