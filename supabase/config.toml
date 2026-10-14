@@ -18,3 +18,9 @@ enabled = false
 enabled = true
 site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = ["http://localhost:3000"]
+
+[functions.studio-api]
+entrypoint = "./functions/studio-api/index.js"
+# Auth is checked in the handler with auth.getUser for every protected request.
+# Only OpenAPI and CORS preflight are public; commands and queries require a user JWT.
+verify_jwt = false

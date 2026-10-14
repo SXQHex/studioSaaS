@@ -1,19 +1,25 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
-  workspacePageSchema,
-  workspaceDataSchema,
-  insightsDataSchema,
-} from "@/lib/workspace";
-import {
-  workspaceDateRange,
   decodeInsights,
   decodePlanning,
+  workspaceDateRange,
 } from "@/lib/data/workspace";
+import {
+  insightsDataSchema,
+  workspaceDataSchema,
+  workspacePageSchema,
+} from "@/lib/workspace";
+
 const rpc = vi.fn();
 vi.mock("@/lib/supabase/access", () => ({
-  requireRole: vi.fn(async () => ({ supabase: { rpc } })),
+  requireRole: vi.fn(async () => ({
+    supabase: { rpc },
+    profile: { roles: ["admin"] },
+  })),
 }));
+
 import { listWorkspaceSection } from "@/lib/actions/workspace";
+
 describe("workspace data boundaries", () => {
   it("rejects malformed lists instead of rendering invalid rows", () => {
     expect(
@@ -109,6 +115,7 @@ describe("workspace list entry point", () => {
 });
 
 import { databaseEnvironment } from "../scripts/verify-database.mjs";
+
 describe("isolated PostgreSQL connection", () => {
   it("passes the connection host and port rather than connecting to the runner socket", () => {
     const env = databaseEnvironment(

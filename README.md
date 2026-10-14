@@ -68,3 +68,8 @@ See [docs/initial-admin-setup.md](docs/initial-admin-setup.md) to securely promo
 Keep this repository on its existing **Vercel** deployment and preserve its project, backend and deployment settings. Use the environment variables listed in .env.example. Node.js 24 is enforced by .nvmrc and package.json. See docs/production-deployment.md and docs/recovery-database-rollout.md.
 
 For the custom domain and Auth callback allowlist, follow [docs/production-deployment.md](docs/production-deployment.md). Backup/restore operations are documented in [docs/backup-and-restore.md](docs/backup-and-restore.md).
+
+## Ortak backend ve native istemciler
+
+Android, iOS, macOS ve Windows için Supabase Data API/RLS ve Deno Edge API
+entegrasyonu: [Backend istemci kılavuzu](docs/backend-clients.md).

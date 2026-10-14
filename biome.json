@@ -27,6 +27,20 @@
       "formatter": {
         "enabled": false
       }
+    },
+    {
+      "includes": [
+        "supabase/functions/studio-api/index.js"
+      ],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
     }
   ]
 }

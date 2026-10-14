@@ -25,10 +25,21 @@ jobs:
           node-version-file: .nvmrc
       - name: Install dependencies
         run: npm ci
+      - name: Validate Vercel pnpm lockfile
+        run: npx --yes pnpm@10.17.1 install --lockfile-only --frozen-lockfile --ignore-scripts
       - name: Audit dependencies
         run: npm audit --audit-level=high
       - name: Check formatting
         run: npm run format:check
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check shared Edge API bundle
+        run: |
+          npm run check:edge
+          deno check supabase/functions/studio-api/index.js
+          node scripts/smoke-edge-api.mjs
       - name: Lint
         run: npm run lint
       - name: Type check
