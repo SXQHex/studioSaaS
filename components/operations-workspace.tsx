@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { runOperation } from "@/lib/actions/operations";
 import { studioInputToIso } from "@/lib/studio-date";
 import { OperationsTable } from "@/components/operations-table";
@@ -57,11 +57,11 @@ const sectionColumns:Record<string,string[]> = {
 };
 const sectionNames:Record<string,string>={waitlist:"Bekleme listesi",groups:"Gruplar",enrollments:"Grup kayıtları",lessons:"Ders listesi",subscriptions:"Paket ve borç durumu",payments:"Tahsilat defteri",leads:"Aday müşteriler",tasks:"Takip görevleri",outcomes:"İptal ve gelmeme kayıtları",changes:"Ders işlem geçmişi",policies:"Merkez iptal kuralları"};
 export function OperationsWorkspace({module,title,data,manager,instructor,loadError}:{module:string;title:string;data:Snapshot;manager:boolean;instructor:boolean;loadError:boolean}) {
- const router=useRouter();
+ const router=useRouter();const params=useSearchParams();
  const all=definitions[module]??{};
  const available=Object.keys(all).filter(action=>module!=="lesson-operations" || manager || (instructor ? action!=="policy" && action!=="makeup" : action==="student_cancel"));
- const [action,setAction]=useState(available[0]??"");
- const [values,setValues]=useState<Record<string,string>>({});
+ const [action,setAction]=useState(available.includes(params?.get("action")??"")?(params?.get("action")??""):available[0]??"");
+ const [values,setValues]=useState<Record<string,string>>(()=>Object.fromEntries(["subscription_id","lesson_id","member_id","lead_id"].map(k=>[k,params?.get(k)??""])));
  const [key,setKey]=useState(()=>crypto.randomUUID());
  const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [success,setSuccess]=useState("");
  const fields=all[action]??[];
@@ -71,6 +71,7 @@ export function OperationsWorkspace({module,title,data,manager,instructor,loadEr
    if(field.dataset==="stages")return ["new","contacted","trial","followup","lost"].map(id=>({id,label:({new:"Yeni",contacted:"İletişim kuruldu",trial:"Deneme dersi",followup:"Takip",lost:"Kapandı"} as Record<string,string>)[id]}));
    return (data[field.dataset??""]??[]).filter(item=>{
     if(["rooms","instructors"].includes(field.dataset??"") && values.center_id)return item.center_id===values.center_id;
+    if(field.dataset==="subscriptions" && values.member_id)return item.member_id===values.member_id;
     if(field.dataset==="payments" && values.subscription_id)return item.subscription_id===values.subscription_id;
     if(field.dataset==="tasks" && values.lead_id)return item.lead_id===values.lead_id;
     if(field.dataset==="members" && values.group_id){const g=data.groups?.find(g=>g.id===values.group_id);return !g || item.center_id===g.center_id;}
@@ -94,6 +95,22 @@ export function OperationsWorkspace({module,title,data,manager,instructor,loadEr
    return next;
   });
  }
+ function startFromRow(nextAction:string,row:Item,section:string){
+ if(!available.includes(nextAction))return;
+ const next:Record<string,string>={};
+ if(section==="subscriptions")next.subscription_id=String(row.id);
+ if(section==="payments"){next.subscription_id=String(row.subscription_id);next.entry_id=String(row.id);}
+ if(section==="lessons"){next.lesson_id=String(row.id);if(row.private_member_id)next.member_id=String(row.private_member_id);}
+ if(section==="groups")next.group_id=String(row.id);
+ if(section==="leads"){next.lead_id=String(row.id);next.stage=String(row.stage==="converted"?"followup":row.stage??"new");next.interests=String(row.interests??"");next.notes=String(row.notes??"");next.trial_at=row.trial_at?new Date(Date.parse(String(row.trial_at))+3*3600000).toISOString().slice(0,16):"";}
+ if(section==="tasks"){next.lead_id=String(row.lead_id);next.task_id=String(row.id);}
+ setAction(nextAction);setValues(next);setKey(crypto.randomUUID());setError("");setSuccess("");
+ document.getElementById("operation-form")?.scrollIntoView({behavior:"smooth",block:"start"});
+ }
+ function rowActions(section:string,row:Item){
+ const candidates=section==="subscriptions"?["collect","refund"]:section==="payments"?["reverse"]:section==="lessons"?(module==="lesson-operations"?["cancel","reschedule","student_cancel"]:[]):section==="leads"?["task","update","convert"]:section==="tasks"&&!row.completed_at?["complete_task"]:section==="groups"?["enroll","waitlist"]:[];
+ return candidates.filter(a=>available.includes(a)).map(a=><button key={a} type="button" disabled={busy} className="text-action" onClick={()=>startFromRow(a,row,section)}>{labels[a]}</button>);
+ }
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();setBusy(true);setError("");setSuccess("");
   const input:Record<string,unknown>={action};
@@ -104,7 +121,7 @@ export function OperationsWorkspace({module,title,data,manager,instructor,loadEr
  return <div className="dashboard-content">
   <div className="page-heading"><div><p className="eyebrow">STÜDYO İŞLEMLERİ</p><h1>{title}</h1><p className="dashboard-subtitle">{descriptions[module]}</p></div></div>
   {loadError && <p className="notice error" role="alert">Veriler yüklenemedi. Sayfayı yenileyin.</p>}
-  <section className="form-card"><form className="record-form" onSubmit={submit}>
+  <section className="form-card" id="operation-form"><form className="record-form" onSubmit={submit}>
    <label>İşlem<select value={action} disabled={busy} onChange={e=>{setAction(e.target.value);setValues({});setError("");setSuccess("");setKey(crypto.randomUUID());}}>{available.map(a=><option key={a} value={a}>{labels[a]}</option>)}</select></label>
    <div className="field-grid">{fields.map(field=><label key={field.key} htmlFor={module+"-"+action+"-"+field.key}>{field.label}{!field.optional?" *":""}
     {field.kind==="select" ? <select id={module+"-"+action+"-"+field.key} required={!field.optional} value={value(field)} disabled={busy} onChange={e=>change(field.key,e.target.value)}><option value="">Seçin</option>{options(field).map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select>
@@ -115,6 +132,6 @@ export function OperationsWorkspace({module,title,data,manager,instructor,loadEr
    {error&&<p className="notice error" role="alert">{error}</p>}{success&&<p className="notice success" role="status">{success}</p>}
    <button className="primary-action" disabled={busy||loadError} type="submit">{busy?"Kaydediliyor…":labels[action]}</button>
   </form></section>
-  {Object.entries(data).filter(([name])=>sectionColumns[name]&&name!=="members"&&name!=="policies").map(([name,rows])=><section className="table-card" key={name}><div className="table-toolbar"><div><h2>{sectionNames[name]}</h2><p>{rows.length} kayıt</p></div></div><OperationsTable rows={rows} columns={sectionColumns[name]}/></section>)}
+  {Object.entries(data).filter(([name])=>sectionColumns[name]&&name!=="members"&&name!=="policies").map(([name,rows])=><section className="table-card" key={name}><div className="table-toolbar"><div><h2>{sectionNames[name]}</h2><p>{rows.length} kayıt</p></div></div><OperationsTable rows={rows} columns={sectionColumns[name]} actions={row=>rowActions(name,row)}/></section>)}
  </div>;
 }
