@@ -65,6 +65,6 @@ See [docs/initial-admin-setup.md](docs/initial-admin-setup.md) to securely promo
 
 ## Deployment
 
-Import this repository as a **new Netlify site** and configure the environment variables listed in `.env.example`. Do not attach this repository to the existing `fethiyetango.netlify.app` marketing site. Node.js 24 is enforced by `.nvmrc` and `package.json`. Let Netlify use its Next.js runtime/adapter; do not configure a static-only export.
+Keep this repository on its existing **Vercel** deployment and preserve its project, backend and deployment settings. Use the environment variables listed in .env.example. Node.js 24 is enforced by .nvmrc and package.json. See docs/production-deployment.md and docs/recovery-database-rollout.md.
 
 For the custom domain and Auth callback allowlist, follow [docs/production-deployment.md](docs/production-deployment.md). Backup/restore operations are documented in [docs/backup-and-restore.md](docs/backup-and-restore.md).

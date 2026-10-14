@@ -1,10 +1,10 @@
 # Authentication and authorization target design
 
-Decision (2026-10-13): **Multi-role RBAC + ABAC**. The current database still uses a single `profiles.role` enum; this decision is the target design and is **not** yet fully implemented. Do not represent the current three-role RLS policies as enforcing the six-role model.
+Current implementation (verified 2026-10-14): **Multi-role RBAC + ABAC is active** in scoped assignment tables, session role resolution, RLS and RPC authorization. The legacy profiles.role remains a compatibility field; it is not the source of staff privileges.
 
 Target roles: `appowner` (platform), `owner` (organization), `admin` (center), `instructor` (assigned lessons), `ainstructor` (assigned lessons, attendance only), `student` (own learning records). Roles may overlap for a single user and vary by organization, center and lesson. A staff member can also attend a lesson as a student.
 
-RBAC determines allowed operations; ABAC evaluates attributes such as organization/center membership, lesson assignment, student enrollment, time window, lesson state and resource ownership. Evaluate the conditions in database RLS policies and trusted server actions. Registration never accepts privileged roles from user-submitted metadata. Migrate `profiles.role` to scoped role assignments in a separately tested schema change, rather than adding the new roles to the single-valued enum prematurely.
+RBAC determines allowed operations; ABAC evaluates attributes such as organization/center membership, lesson assignment, student enrollment, time window, lesson state and resource ownership. Evaluate the conditions in database RLS policies and trusted server actions. Registration never accepts privileged roles from user-submitted metadata. Staff privileges now come from scoped role assignments rather than the legacy single-role enum.
 
 ## Public registration
 
@@ -22,8 +22,8 @@ Authentication pages live in `app/(auth)/login`, `app/(auth)/register`, and `app
 ## Phased multi-role rollout (2026-10-13)
 
 1. Additive schema foundation: `platform_role_assignments`, `organization_role_assignments`, `center_role_assignments`, `lesson_staff_assignments`, and `lesson_enrollments`. A person can hold multiple roles in different scopes and be enrolled in a lesson at the same time. The student context is derived from enrollment or the person's own profile.
-2. **Not yet active authorization:** Existing `profiles.role`, `center_admins`, `lessons.instructor_id` and corresponding RLS remain in effect. New relationship tables grant authenticated users only self-read, with no client mutation privileges. Do not use them to grant production privileges before backfill and policy cutover.
-3. Next stage: test scope integrity (same organization/center across assignments and enrollment), backfill historical administrator/instructor relationships, migrate server session and pages to multi-context role resolution, implement deny-by-default RLS for all affected CRUD operations, and add negative cross-center/cross-organization tests. Then remove the legacy single-role field only when no application code relies on it.
+2. **Active scoped authorization:** Backfill, RLS cutover, session role resolution and trusted role-management RPCs are implemented. Direct client writes to privileged assignment tables remain restricted.
+3. Scope integrity, scoped role backfill, multi-context sessions and cross-center/cross-organization negative contracts are implemented. Real-session UI acceptance remains separately tracked. Retain the legacy single-role field until all compatibility consumers are removed.
 4. Privileged role assignment must be performed by vetted server/database flows. Do not infer or grant `appowner`, `owner`, `admin`, `instructor` or `ainstructor` from user-editable Auth metadata.
 
 ## Persistent development test accounts (2026-10-13)

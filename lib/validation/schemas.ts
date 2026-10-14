@@ -96,11 +96,11 @@ export const subscriptionSchema = z
     notes: optionalText(1500, "Notlar"),
   })
   .superRefine((value, ctx) => {
-    if (value.type === "private_credits" && (!value.ends_on || value.ends_on < value.starts_on)) {
+    if (value.ends_on && value.ends_on < value.starts_on) {
       ctx.addIssue({
         code: "custom",
         path: ["ends_on"],
-        message: "Özel ders paketi için başlangıçtan önce olmayan bir bitiş tarihi girin.",
+        message: "Bitiş tarihi başlangıçtan önce olamaz.",
       });
     }
   })

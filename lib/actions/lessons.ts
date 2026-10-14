@@ -69,6 +69,7 @@ export async function changeLessonStatus(input: unknown): Promise<ActionResult> 
     return fail("Tamamlanan dersin durumu değiştirilemez; krediler işlenmiş olabilir.");
   }
 
+  if (data.status === "cancelled" || data.status === "postponed" || current.status === "cancelled" || current.status === "postponed") return fail("İptal, erteleme ve telafi ekranını kullanın; açıklama ve kredi kuralları bu ekranda uygulanır.");
   const { error } = await supabase.from("lessons").update({ status: data.status }).eq("id", data.id);
   if (error) return fail(dbErrorMessage(error, "Ders durumu değiştirilemedi."));
 

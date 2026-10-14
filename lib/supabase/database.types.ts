@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      lesson_member_outcomes: {
+        Row: { lesson_id: string; member_id: string; outcome: string; actor_id: string; note: string; created_at: string }
+        Insert: { lesson_id: string; member_id: string; outcome: string; actor_id: string; note: string; created_at?: string }
+        Update: { lesson_id?: string; member_id?: string; outcome?: string; actor_id?: string; note?: string; created_at?: string }
+        Relationships: []
+      }
       attendance: {
         Row: {
           attended: boolean
@@ -1023,6 +1029,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      policy_workspace: { Args: Record<PropertyKey, never>; Returns: Json }
+      policy_command: { Args: { p_data: Json }; Returns: Json }
+      policy_cancel_exception: { Args: { p_data: Json }; Returns: Json }
+
+      my_payment_balances: { Args: Record<PropertyKey, never>; Returns: { subscription_id: string; amount: number; paid: number; balance: number }[] }
+
+      planned_group_usage: { Args: { p_request_ids: string[] }; Returns: {request_id:string;title:string;starts_at:string;ends_at:string}[] }
+
+      waitlist_command: { Args: { p_data: Json }; Returns: Json }
+      groups_command: { Args: { p_data: Json }; Returns: Json }
+      payments_command: { Args: { p_data: Json }; Returns: Json }
+      lesson_command: { Args: { p_data: Json }; Returns: Json }
+      crm_command: { Args: { p_data: Json }; Returns: Json }
+      studio_workspace: { Args: { p_module: string }; Returns: Json }
+      studio_report: { Args: { p_from: string; p_to: string }; Returns: Json }
+
       my_teaching_lessons: {
         Args: Record<string, never>
         Returns: { id: string; center_id: string; title: string; type: Database["public"]["Enums"]["lesson_type"]; starts_at: string; status: Database["public"]["Enums"]["lesson_status"]; expected_attendees: number | null }[]

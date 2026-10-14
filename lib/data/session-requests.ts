@@ -11,7 +11,7 @@ export type SessionRequestRow = Pick<
   "id" | "organization_id" | "center_id" | "room_id" | "instructor_id" | "session_type" | "title" |
   "private_member_id" | "starts_at" | "ends_at" | "expected_attendees" | "notes" | "status" | "created_at" | "review_note" | "requested_by" | "approved_lesson_id" |
   "alternative_starts_at" | "alternative_ends_at" | "alternative_note" | "alternative_proposed_at"
-> & { center_name: string; room_name: string | null; instructor_name: string; member_name: string | null; events: Tables<"session_request_events">[] };
+> & { center_name: string; room_name: string | null; instructor_name: string; member_name: string | null; events: Tables<"session_request_events">[]; planned_groups: {title:string;starts_at:string;ends_at:string}[] };
 
 export async function listSchedulingResources(supabase: ServerSupabase) {
   const [organizations, centers, rooms, members, instructors, admins] = await Promise.all([
@@ -49,6 +49,7 @@ export async function listSessionRequests(supabase: ServerSupabase) {
     .order("created_at", { ascending: false }).limit(200);
   const { data, error } = await query;
   const requests = data ?? [];
+  const planned = requests.length ? await supabase.rpc("planned_group_usage",{p_request_ids:requests.map(r=>r.id)}) : {data:[],error:null};
   const events = requests.length ? await supabase.from("session_request_events").select("*").in("request_id", requests.map(r => r.id)).order("created_at", { ascending: false }).limit(1000) : { data: [], error: null };
   const centerIds = [...new Set(requests.map((r) => r.center_id))];
   const roomIds = [...new Set(requests.map((r) => r.room_id).filter((id): id is string => Boolean(id)))];
@@ -68,12 +69,13 @@ export async function listSessionRequests(supabase: ServerSupabase) {
   return {
     rows: requests.map((r) => ({
       ...r,
+      planned_groups:(planned.data ?? []).filter(group=>group.request_id===r.id),
       events: (events.data ?? []).filter(event => event.request_id === r.id),
       center_name: centerMap.get(r.center_id)?.name ?? "Merkez",
       room_name: r.room_id ? roomMap.get(r.room_id)?.name ?? null : null,
       instructor_name: instructorMap.get(r.instructor_id)?.full_name ?? "Eğitmen",
       member_name: r.private_member_id ? memberMap.get(r.private_member_id)?.full_name ?? null : null,
     })) as SessionRequestRow[],
-    error: Boolean(error || events.error),
+    error: Boolean(error || events.error || planned.error),
   };
 }

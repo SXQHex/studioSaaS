@@ -40,8 +40,13 @@ const navigation = [
   { href: "/dashboard/subscriptions", label: "Abonelikler", icon: CreditCard },
   { href: "/dashboard/credits", label: "Kredi hareketleri", icon: Wallet },
   { href: "/dashboard/session-requests", label: "Seans talepleri", icon: CalendarDays },
+  { href: "/dashboard/groups", label: "Grup programları", icon: Users },
+  { href: "/dashboard/payments", label: "Manuel tahsilatlar", icon: Wallet },
+  { href: "/dashboard/lesson-operations", label: "İptal ve telafi", icon: CalendarDays },
+  { href: "/dashboard/crm", label: "Pazarlama CRM", icon: Users },
   { href: "/dashboard/notifications", label: "Bildirimler", icon: Bell },
   { href: "/dashboard/account", label: "Hesap ve güvenlik", icon: UserCircle2 },
+  { href: "/dashboard/settings", label: "Organizasyon / merkez ayarları", icon: ShieldCheck },
   { href: "/dashboard/reports", label: "Raporlama", icon: BarChart3 },
 ];
 
@@ -63,9 +68,9 @@ export function DashboardShell({
   const isInstructor = roles.includes("instructor");
   const isAssistant = roles.includes("ainstructor");
   const visibleNavigation = isManager ? navigation
-    : isInstructor ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications", "/dashboard/my-learning", "/dashboard/my-students", "/dashboard/account"].includes(item.href))
-    : isAssistant ? navigation.filter((item) => ["/dashboard", "/dashboard/attendance", "/dashboard/notifications", "/dashboard/my-learning", "/dashboard/account"].includes(item.href))
-    : navigation.filter((item) => ["/dashboard", "/dashboard/notifications", "/dashboard/my-learning", "/dashboard/account"].includes(item.href));
+    : isInstructor ? navigation.filter((item) => ["/dashboard", "/dashboard/lessons", "/dashboard/attendance", "/dashboard/session-requests", "/dashboard/notifications", "/dashboard/my-learning", "/dashboard/lesson-operations", "/dashboard/my-students", "/dashboard/account"].includes(item.href))
+    : isAssistant ? navigation.filter((item) => ["/dashboard", "/dashboard/attendance", "/dashboard/notifications", "/dashboard/my-learning", "/dashboard/lesson-operations", "/dashboard/account"].includes(item.href))
+    : navigation.filter((item) => ["/dashboard", "/dashboard/notifications", "/dashboard/my-learning", "/dashboard/lesson-operations", "/dashboard/account"].includes(item.href));
 
   return (
     <main className="dashboard-shell">

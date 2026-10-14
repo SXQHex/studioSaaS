@@ -23,9 +23,13 @@ Verify email confirmation and rate-limit settings against the account-provisioni
 
 ## Deployment verification
 
-- Netlify site: `ftksaasweb`; production URL: `https://ftksaasweb.netlify.app`; custom domain: `https://uye.fethiyetango.com`.
-- Confirm the Netlify site is connected to `SXQHex/studioSaaS`, deploys from `main`, and uses Node 24. Confirm both `/api/health` endpoints return the expected service status.
-- Verify production environment variables in Netlify without copying their values into GitHub or test output. The browser-facing app requires only the Supabase URL and publishable key.
+The application remains on its existing Vercel deployment, connected to SXQHex/studioSaaS. Verify the configured production branch and environment values there without copying secrets into output. No deployment configuration or DNS was changed during recovery.
+
+## Recovery live database verification — 2026-10-14
+
+The earlier 2026-10-12 inventory is historical. Scoped role/member-account/panel/request migrations are applied. Recovery adds the group, collection, lifecycle, reminder, CRM, report and waitlist schema. See [recovery-database-rollout.md](recovery-database-rollout.md). The reminder cron is active every 15 minutes; actual scheduled delivery remains an acceptance check.
+
+Remaining advisor review: btree_gist is in public; public SECURITY DEFINER RPCs use explicit scoped checks and restricted grants; studio_policies intentionally has no direct client access and is served by scoped RPCs. The project uses Supabase Free, which does not support enabling leaked-password protection. This plan limitation is not an open issue or release blocker. No claim is made that these dashboard settings were changed.
 
 ## Center-isolation acceptance tests
 
