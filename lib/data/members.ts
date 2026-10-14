@@ -2,15 +2,34 @@ import type { ServerSupabase } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/database.types";
 import { pageRange } from "./pagination";
 
-export type MemberRow = Pick<Tables<"members">, "id" | "center_id" | "full_name" | "phone" | "email" | "notes" | "is_active" | "created_at" | "profile_id">;
-export type MemberOption = Pick<Tables<"members">, "id" | "full_name" | "is_active">;
+export type MemberRow = Pick<
+  Tables<"members">,
+  | "id"
+  | "center_id"
+  | "full_name"
+  | "phone"
+  | "email"
+  | "notes"
+  | "is_active"
+  | "created_at"
+  | "profile_id"
+>;
+export type MemberOption = Pick<
+  Tables<"members">,
+  "id" | "full_name" | "is_active"
+>;
 
-const MEMBER_COLUMNS = "id, center_id, full_name, phone, email, notes, is_active, created_at, profile_id";
+const MEMBER_COLUMNS =
+  "id, center_id, full_name, phone, email, notes, is_active, created_at, profile_id";
 /** Upper bound for dropdown option lists; larger studios should switch to a searchable picker. */
 export const OPTION_LIMIT = 1000;
 
-export async function listMembers(supabase: ServerSupabase, { q, page, centerIds }: { q: string; page: number; centerIds: string[] }) {
-  if (!centerIds.length) return { rows: [] as MemberRow[], total: 0, error: false };
+export async function listMembers(
+  supabase: ServerSupabase,
+  { q, page, centerIds }: { q: string; page: number; centerIds: string[] },
+) {
+  if (!centerIds.length)
+    return { rows: [] as MemberRow[], total: 0, error: false };
   const [from, to] = pageRange(page);
   let query = supabase
     .from("members")
@@ -18,21 +37,44 @@ export async function listMembers(supabase: ServerSupabase, { q, page, centerIds
     .in("center_id", centerIds)
     .order("created_at", { ascending: false })
     .range(from, to);
-  if (q) query = query.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`);
+  if (q)
+    query = query.or(
+      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+    );
 
   const { data, count, error } = await query;
-  return { rows: (data ?? []) as MemberRow[], total: count ?? 0, error: Boolean(error) };
+  return {
+    rows: (data ?? []) as MemberRow[],
+    total: count ?? 0,
+    error: Boolean(error),
+  };
 }
 
-export async function memberStats(supabase: ServerSupabase, centerIds: string[]) {
-  if (!centerIds.length) return { total: 0, active: 0, inactive: 0, error: false };
+export async function memberStats(
+  supabase: ServerSupabase,
+  centerIds: string[],
+) {
+  if (!centerIds.length)
+    return { total: 0, active: 0, inactive: 0, error: false };
   const [all, active] = await Promise.all([
-    supabase.from("members").select("id", { count: "exact", head: true }).in("center_id", centerIds),
-    supabase.from("members").select("id", { count: "exact", head: true }).in("center_id", centerIds).eq("is_active", true),
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .in("center_id", centerIds),
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .in("center_id", centerIds)
+      .eq("is_active", true),
   ]);
   const total = all.count ?? 0;
   const activeCount = active.count ?? 0;
-  return { total, active: activeCount, inactive: Math.max(0, total - activeCount), error: Boolean(all.error || active.error) };
+  return {
+    total,
+    active: activeCount,
+    inactive: Math.max(0, total - activeCount),
+    error: Boolean(all.error || active.error),
+  };
 }
 
 export async function listMemberOptions(supabase: ServerSupabase) {

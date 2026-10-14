@@ -1,9 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateStudioViews } from "./revalidate";
 import { z } from "zod";
 import { requireRole } from "@/lib/supabase/access";
-import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "@/lib/actions/result";
+import {
+  type ActionResult,
+  dbErrorMessage,
+  fail,
+  ok,
+  parseInput,
+} from "@/lib/actions/result";
 
 const roleSchema = z.object({
   center_id: z.string().uuid(),
@@ -16,17 +22,24 @@ const removeSchema = roleSchema.extend({
   profile_id: z.string().uuid(),
 });
 
-export async function assignScopedCenterRole(input: unknown): Promise<ActionResult> {
+export async function assignScopedCenterRole(
+  input: unknown,
+): Promise<ActionResult> {
   const { supabase } = await requireRole(["admin"]);
   const parsed = parseInput(assignSchema, input);
   if (parsed.failure) return parsed.failure;
 
-  const { data: accounts, error: lookupError } = await supabase.rpc("lookup_center_account", {
-    p_center_id: parsed.data.center_id,
-    p_email: parsed.data.email,
-  });
-  if (lookupError) return fail(dbErrorMessage(lookupError, "Hesap sorgulanamadı."));
-  if (!accounts?.[0]) return fail("Bu e-postaya sahip doğrulanmış bir giriş hesabı bulunamadı.");
+  const { data: accounts, error: lookupError } = await supabase.rpc(
+    "lookup_center_account",
+    {
+      p_center_id: parsed.data.center_id,
+      p_email: parsed.data.email,
+    },
+  );
+  if (lookupError)
+    return fail(dbErrorMessage(lookupError, "Hesap sorgulanamadı."));
+  if (!accounts?.[0])
+    return fail("Bu e-postaya sahip doğrulanmış bir giriş hesabı bulunamadı.");
 
   const { error } = await supabase.rpc("assign_center_role", {
     p_center_id: parsed.data.center_id,
@@ -34,12 +47,13 @@ export async function assignScopedCenterRole(input: unknown): Promise<ActionResu
     p_role: parsed.data.role,
   });
   if (error) return fail(dbErrorMessage(error, "Rol atanamadı."));
-  revalidatePath("/dashboard/roles");
-  revalidatePath("/dashboard");
+  revalidateStudioViews();
   return ok("Kullanıcının merkeze ait rolü atandı.");
 }
 
-export async function removeScopedCenterRole(input: unknown): Promise<ActionResult> {
+export async function removeScopedCenterRole(
+  input: unknown,
+): Promise<ActionResult> {
   const { supabase } = await requireRole(["admin"]);
   const parsed = parseInput(removeSchema, input);
   if (parsed.failure) return parsed.failure;
@@ -50,7 +64,6 @@ export async function removeScopedCenterRole(input: unknown): Promise<ActionResu
     p_role: parsed.data.role,
   });
   if (error) return fail(dbErrorMessage(error, "Rol kaldırılamadı."));
-  revalidatePath("/dashboard/roles");
-  revalidatePath("/dashboard");
+  revalidateStudioViews();
   return ok("Merkez rolü kaldırıldı.");
 }

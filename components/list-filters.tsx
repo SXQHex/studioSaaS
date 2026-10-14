@@ -29,12 +29,19 @@ export function ListFilters({
       action={action}
       className="toolbar-filters"
       onChange={(event) => {
-        if (event.target instanceof HTMLSelectElement) event.currentTarget.requestSubmit();
+        if (event.target instanceof HTMLSelectElement)
+          event.currentTarget.requestSubmit();
       }}
     >
       <label className="search-box">
         {searchIcon ?? <Search size={16} />}
-        <input name="q" defaultValue={query} placeholder={searchPlaceholder} aria-label={searchLabel} maxLength={80} />
+        <input
+          name="q"
+          defaultValue={query}
+          placeholder={searchPlaceholder}
+          aria-label={searchLabel}
+          maxLength={80}
+        />
       </label>
       {children}
     </Form>

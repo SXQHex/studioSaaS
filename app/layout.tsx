@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   description: "Dans okulu yönetim paneli",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="tr"><body>{children}</body></html>;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="tr">
+      <body>{children}</body>
+    </html>
+  );
 }

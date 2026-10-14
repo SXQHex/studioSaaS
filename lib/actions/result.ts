@@ -1,7 +1,9 @@
 import type { z } from "zod";
 import { firstIssue } from "@/lib/validation/schemas";
 
-export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+export type ActionResult =
+  | { ok: true; message: string }
+  | { ok: false; error: string };
 
 export const ok = (message: string): ActionResult => ({ ok: true, message });
 export const fail = (error: string): ActionResult => ({ ok: false, error });
@@ -13,7 +15,10 @@ type DbError = { code?: string; message?: string } | null | undefined;
  * trigger functions (SQLSTATE P0001) are already written for end users and pass through;
  * everything else is replaced so internal details never reach the browser.
  */
-export function dbErrorMessage(error: DbError, fallback = "İşlem tamamlanamadı."): string {
+export function dbErrorMessage(
+  error: DbError,
+  fallback = "İşlem tamamlanamadı.",
+): string {
   switch (error?.code) {
     case "42501":
       return "Bu işlem için yetkiniz yok.";
@@ -34,7 +39,9 @@ export function dbErrorMessage(error: DbError, fallback = "İşlem tamamlanamad�
 export function parseInput<S extends z.ZodType>(
   schema: S,
   input: unknown,
-): { data: z.output<S>; failure?: undefined } | { data?: undefined; failure: ActionResult } {
+):
+  | { data: z.output<S>; failure?: undefined }
+  | { data?: undefined; failure: ActionResult } {
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { failure: fail(firstIssue(parsed.error)) };
   return { data: parsed.data };

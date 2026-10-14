@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ActionResult } from "@/lib/actions/result";
 
 /**
@@ -9,6 +9,7 @@ import type { ActionResult } from "@/lib/actions/result";
  * Server Actions call `revalidatePath`, so the page data refreshes without a manual reload.
  */
 export function useActionRunner() {
+  const running = useRef(false);
   const [busy, setBusy] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -23,6 +24,8 @@ export function useActionRunner() {
     action: () => Promise<ActionResult>,
     options: { rowId?: string; onSuccess?: () => void } = {},
   ): Promise<boolean> {
+    if (running.current) return false;
+    running.current = true;
     reset();
     if (options.rowId) setPendingId(options.rowId);
     else setBusy(true);
@@ -37,9 +40,12 @@ export function useActionRunner() {
       options.onSuccess?.();
       return true;
     } catch {
-      setError("İşlem tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin.");
+      setError(
+        "İşlem tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+      );
       return false;
     } finally {
+      running.current = false;
       setBusy(false);
       setPendingId(null);
     }

@@ -4,6 +4,7 @@ import type { Database } from "./database.types";
 export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("Supabase ortam değişkenleri yapılandırılmamış.");
+  if (!url || !key)
+    throw new Error("Supabase ortam değişkenleri yapılandırılmamış.");
   return createBrowserClient<Database>(url, key);
 }

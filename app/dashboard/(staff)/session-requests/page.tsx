@@ -1,11 +1,17 @@
 import { requireRole } from "@/lib/supabase/access";
-import { listSchedulingResources, listSessionRequests } from "@/lib/data/session-requests";
+import {
+  listSchedulingResources,
+  listSessionRequests,
+} from "@/lib/data/session-requests";
 import { SessionRequestsManager } from "./session-requests-manager";
 
 export const metadata = { title: "Seans Talepleri | FTK Studio" };
 
 export default async function SessionRequestsPage() {
-  const { supabase, profile, userId } = await requireRole(["admin", "instructor"]);
+  const { supabase, profile, userId } = await requireRole([
+    "admin",
+    "instructor",
+  ]);
   const isAdmin = profile.role === "admin";
   const [resources, requestList] = await Promise.all([
     listSchedulingResources(supabase),

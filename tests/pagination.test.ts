@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { PAGE_SIZE, pageCount, pageRange, parsePage, pickOption, pickUuid, sanitizeSearchTerm } from "@/lib/data/pagination";
+import {
+  PAGE_SIZE,
+  pageCount,
+  pageRange,
+  parsePage,
+  pickOption,
+  pickUuid,
+  sanitizeSearchTerm,
+} from "@/lib/data/pagination";
 
 describe("parsePage", () => {
   it("defaults to 1 for missing or invalid values", () => {
@@ -30,7 +38,9 @@ describe("pageRange / pageCount", () => {
 
 describe("sanitizeSearchTerm", () => {
   it("removes characters that are meaningful in PostgREST filters", () => {
-    expect(sanitizeSearchTerm("ali,full_name.eq.x)")).toBe("ali full name.eq.x");
+    expect(sanitizeSearchTerm("ali,full_name.eq.x)")).toBe(
+      "ali full name.eq.x",
+    );
     expect(sanitizeSearchTerm('a%b_c"d\\e*f')).toBe("a b c d e f");
   });
 
@@ -45,7 +55,9 @@ describe("pickOption / pickUuid", () => {
   it("only lets whitelisted values through", () => {
     expect(pickOption("active", ["active", "expired"] as const)).toBe("active");
     expect(pickOption("drop table", ["active", "expired"] as const)).toBe("");
-    expect(pickUuid("3f2b8c1e-9d4a-4b6e-8f10-2c7d5a9e1b34")).toBe("3f2b8c1e-9d4a-4b6e-8f10-2c7d5a9e1b34");
+    expect(pickUuid("3f2b8c1e-9d4a-4b6e-8f10-2c7d5a9e1b34")).toBe(
+      "3f2b8c1e-9d4a-4b6e-8f10-2c7d5a9e1b34",
+    );
     expect(pickUuid("1; select")).toBe("");
   });
 });

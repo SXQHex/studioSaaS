@@ -11,7 +11,10 @@ export default async function AccountPage() {
         <div>
           <p className="eyebrow">KİŞİSEL AYARLAR</p>
           <h1>Hesap ve güvenlik</h1>
-          <p className="dashboard-subtitle">Profil adınızı ve giriş şifrenizi yönetin. Rolleriniz ve merkez yetkileriniz bu ekrandan değiştirilemez.</p>
+          <p className="dashboard-subtitle">
+            Profil adınızı ve giriş şifrenizi yönetin. Rolleriniz ve merkez
+            yetkileriniz bu ekrandan değiştirilemez.
+          </p>
         </div>
       </div>
       <AccountSettings fullName={profile.fullName} email={email} />

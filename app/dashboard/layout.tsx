@@ -12,7 +12,11 @@ export const metadata = {
   },
 };
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   // Memoised per request: pages and Server Actions that call requireRole() reuse this lookup.
   const session = await getSession();
 
@@ -21,14 +25,31 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   const supabase = await createClient();
-  const unreadResult = session.status === "ready"
-    ? await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("recipient_id", session.userId).is("read_at", null)
-    : { count: 0, error: null };
+  const unreadResult =
+    session.status === "ready"
+      ? await supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("recipient_id", session.userId)
+          .is("read_at", null)
+      : { count: 0, error: null };
 
   return (
     <DashboardShell
       email={session.status === "ready" ? session.email : ""}
-      roleLabel={session.status === "ready" ? (session.profile.roles.find((r) => ["appowner", "owner", "admin", "instructor", "ainstructor"].includes(r)) ?? "student") : "Rol doğrulanamadı"}
+      roleLabel={
+        session.status === "ready"
+          ? (session.profile.roles.find((r) =>
+              [
+                "appowner",
+                "owner",
+                "admin",
+                "instructor",
+                "ainstructor",
+              ].includes(r),
+            ) ?? "student")
+          : "Rol doğrulanamadı"
+      }
       roles={session.status === "ready" ? session.profile.roles : []}
       unreadNotificationCount={unreadResult.count ?? 0}
     >

@@ -14,7 +14,10 @@ export function parsePage(value: SearchParamValue): number {
 }
 
 /** Inclusive row range for Supabase `.range()`. */
-export function pageRange(page: number, pageSize = PAGE_SIZE): [number, number] {
+export function pageRange(
+  page: number,
+  pageSize = PAGE_SIZE,
+): [number, number] {
   const from = (page - 1) * pageSize;
   return [from, from + pageSize - 1];
 }
@@ -36,13 +39,22 @@ export function sanitizeSearchTerm(value: SearchParamValue): string {
 }
 
 /** Returns the value only if it is one of the allowed options, otherwise "". */
-export function pickOption<T extends string>(value: SearchParamValue, allowed: readonly T[]): T | "" {
+export function pickOption<T extends string>(
+  value: SearchParamValue,
+  allowed: readonly T[],
+): T | "" {
   const candidate = first(value);
-  return (allowed as readonly string[]).includes(candidate) ? (candidate as T) : "";
+  return (allowed as readonly string[]).includes(candidate)
+    ? (candidate as T)
+    : "";
 }
 
 /** Returns the value only if it looks like a UUID, otherwise "". */
 export function pickUuid(value: SearchParamValue): string {
   const candidate = first(value);
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate) ? candidate : "";
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    candidate,
+  )
+    ? candidate
+    : "";
 }
