@@ -1,10 +1,11 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 export const policyCommandSchema = z
   .object({
     action: z.enum(["organization", "center", "reset"]),
     key: z.string().min(1).max(80),
-    organization_id: z.string().uuid().optional(),
-    center_id: z.string().uuid().optional(),
+    organization_id: databaseId().optional(),
+    center_id: databaseId().optional(),
     value: z.union([z.number().int(), z.boolean()]).optional(),
     mode: z.enum(["mandatory", "recommended"]).optional(),
     min: z.number().int().nullable().optional(),
@@ -23,8 +24,8 @@ export const policyCommandSchema = z
       c.addIssue({ code: "custom", message: "Alt sınır üst sınırı aşamaz." });
   });
 export const policyExceptionSchema = z.object({
-  lesson_id: z.string().uuid(),
-  member_id: z.string().uuid(),
+  lesson_id: databaseId(),
+  member_id: databaseId(),
   operation: z.enum(["student_cancel", "no_show"]),
   overrides: z
     .object({

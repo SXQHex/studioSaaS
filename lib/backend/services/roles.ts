@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import { type BackendContext, requireBackendRole } from "../context";
 import {
@@ -9,14 +10,14 @@ import {
 } from "../result";
 
 const roleSchema = z.object({
-  center_id: z.string().uuid(),
+  center_id: databaseId(),
   role: z.enum(["admin", "instructor", "ainstructor"]),
 });
 export const assignSchema = roleSchema.extend({
   email: z.string().trim().email().max(254),
 });
 export const removeSchema = roleSchema.extend({
-  profile_id: z.string().uuid(),
+  profile_id: databaseId(),
 });
 
 export async function assignScopedCenterRole(

@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import { policyCommandSchema, policyExceptionSchema } from "@/lib/policies";
 import {
@@ -56,7 +57,7 @@ function command<S extends z.ZodType>(
     },
   };
 }
-const id = z.string().uuid();
+const id = databaseId();
 const identity = z.object({ id }).strict();
 const empty = z.object({}).strict();
 export const commands = {

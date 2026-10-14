@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import { memberSchema, memberStatusSchema } from "@/lib/validation/schemas";
 import { type BackendContext, requireBackendRole } from "../context";
@@ -54,7 +55,7 @@ const exactEmail = z
   .email("Geçerli bir giriş e-postası girin.")
   .max(254)
   .transform((e) => e.toLowerCase());
-const uuid = z.string().uuid();
+const uuid = databaseId();
 export const centerAccountSchema = z.object({
   center_id: uuid,
   email: exactEmail,

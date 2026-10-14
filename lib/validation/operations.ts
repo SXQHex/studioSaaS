@@ -1,5 +1,6 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
-const id = z.string().uuid();
+const id = databaseId();
 const note = z.string().trim().min(1, "Açıklama zorunlu.").max(500);
 const time = z.string().datetime();
 export const groupsOperation = z.discriminatedUnion("action", [

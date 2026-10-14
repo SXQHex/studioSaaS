@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import { type BackendContext, requireBackendRole } from "../context";
 import { type ActionResult, fail, ok, parseInput } from "../result";
@@ -11,7 +12,7 @@ export async function markNotificationRead(
     "instructor",
     "student",
   ]);
-  const parsed = parseInput(z.object({ id: z.string().uuid() }), input);
+  const parsed = parseInput(z.object({ id: databaseId() }), input);
   if (parsed.failure) return parsed.failure;
   const { error } = await supabase
     .from("notifications")

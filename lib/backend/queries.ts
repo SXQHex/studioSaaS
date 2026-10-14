@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import { listAttendance } from "@/lib/data/attendance";
 import { listTransactions } from "@/lib/data/credits";
@@ -17,7 +18,7 @@ import { centerAccountSchema, lookupCenterAccount } from "./services/members";
 import { listRequestableMembers } from "./services/session-requests";
 import { listWorkspaceSection, requestSchema } from "./services/workspace";
 
-const id = z.string().uuid();
+const id = databaseId();
 const empty = z.object({}).strict();
 const page = z.number().int().min(1).max(10000).default(1);
 const list = z.object({ q: z.string().max(80).default(""), page });

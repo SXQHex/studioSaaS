@@ -1,5 +1,6 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
-const id = z.string().uuid();
+const id = databaseId();
 const time = z.string().datetime();
 const date = z.string().date();
 const short = z.string().trim().min(1).max(160);

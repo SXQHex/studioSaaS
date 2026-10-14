@@ -1,3 +1,4 @@
+import { databaseId } from "@/lib/validation/database-id";
 import { z } from "zod";
 import {
   alternativeSessionRequestSchema,
@@ -15,7 +16,7 @@ import {
   parseInput,
 } from "../result";
 
-const uuid = z.string().uuid();
+const uuid = databaseId();
 const label = z.string().trim().min(1).max(160);
 export const resourceSchema = z.object({ name: label });
 export const centerSchema = z.object({
