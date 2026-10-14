@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { listWorkspaceSection } from "@/lib/actions/workspace";
+import { paymentBalanceRow } from "@/lib/payment-balance";
 import { studioDateTime } from "@/lib/studio-date";
 const names: Record<string, string> = {
   missing: "Eksikler",
@@ -47,6 +48,7 @@ const names: Record<string, string> = {
   amount: "Tutar",
   paid: "Net tahsilat",
   balance: "Kalan borç",
+  credit_balance: "Müşteri alacağı",
   payment_status: "Ödeme durumu",
   kind: "İşlem",
   occurred_at: "İşlem tarihi",
@@ -178,8 +180,8 @@ export function OperationsTable({
           section,
           page,
           query,
-          sort: sort || "id",
-          ascending,
+          sort: sort === "credit_balance" ? "balance" : sort || "id",
+          ascending: sort === "credit_balance" ? !ascending : ascending,
           filters: status && stateColumn ? { [stateColumn]: status } : {},
         });
         if (!active) return;
@@ -211,7 +213,7 @@ export function OperationsTable({
     rows,
     initialTotal,
   ]);
-  const displayed = remote ? loaded.rows : rows;
+  const displayed = (remote ? loaded.rows : rows).map(paymentBalanceRow);
   const stateOptions: Record<string, string[]> = {
     stage: ["new", "contacted", "trial", "followup", "converted", "lost"],
     kind: ["collection", "refund", "reversal", "legacy"],
@@ -244,7 +246,7 @@ export function OperationsTable({
     : [];
   const filtered = remote
     ? displayed
-    : rows.filter(
+    : displayed.filter(
         (row) =>
           (!status || String(row[stateColumn ?? ""]) === status) &&
           (!query ||

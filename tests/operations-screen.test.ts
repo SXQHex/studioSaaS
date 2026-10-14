@@ -51,6 +51,18 @@ describe("operation screen rendering", () => {
     expect(html).not.toContain("Dersi iptal et");
     expect(html).not.toContain("İptal süresini ayarla");
   });
+  it("shows excess cash as customer money owed rather than negative debt", () => {
+    const html = renderToStaticMarkup(
+      createElement(OperationsTable, {
+        rows: [{ id: "overpaid", amount: 950, paid: 1000, balance: -50 }],
+        columns: ["amount", "paid", "balance", "credit_balance"],
+      }),
+    );
+    expect(html).toContain("Müşteri alacağı");
+    expect(html).toContain("<td>0</td>");
+    expect(html).toContain("<td>50</td>");
+    expect(html).not.toContain("<td>-50</td>");
+  });
   it("renders ledger amounts and dates rather than implementation objects", () => {
     const html = renderToStaticMarkup(
       createElement(OperationsTable, {

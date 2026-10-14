@@ -193,7 +193,14 @@ const sectionColumns: Record<string, string[]> = {
     "enrolled",
     "capacity",
   ],
-  subscriptions: ["label", "amount", "paid", "balance", "payment_status"],
+  subscriptions: [
+    "label",
+    "amount",
+    "paid",
+    "balance",
+    "credit_balance",
+    "payment_status",
+  ],
   payments: [
     "member",
     "amount",
@@ -511,6 +518,12 @@ export function OperationsWorkspace({
               ))}
             </select>
           </label>
+          {module === "payments" && (
+            <p>
+              Fazla tahsilat müşteri alacağı olarak izlenir. Para üstünü
+              verdiğinizde aynı paket için iade kaydı girin.
+            </p>
+          )}
           <WorkspaceFields
             module={module}
             fields={fields}

@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/lib/payment-balance";
 import { Activity, CalendarDays, CreditCard, Wallet } from "lucide-react";
 import Link from "next/link";
 import {
@@ -325,7 +326,22 @@ export async function StudentHome({
                     <small>
                       Ödenen: {money(Number(balances.get(item.id)?.paid ?? 0))}{" "}
                       · Kalan borç:{" "}
-                      {money(Number(balances.get(item.id)?.balance ?? 0))}
+                      {money(
+                        paymentBalance(
+                          Number(balances.get(item.id)?.balance ?? 0),
+                        ).debt,
+                      )}
+                      {Number(balances.get(item.id)?.balance ?? 0) < 0 && (
+                        <>
+                          {" "}
+                          · Alacağınız:{" "}
+                          {money(
+                            paymentBalance(
+                              Number(balances.get(item.id)?.balance ?? 0),
+                            ).credit,
+                          )}
+                        </>
+                      )}
                     </small>
                   )}
                 </div>
