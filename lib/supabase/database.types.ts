@@ -2434,6 +2434,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      registration_self_workspace: { Args: Record<PropertyKey, never>; Returns: Json }
+      lesson_package_eligibility: { Args: { p_lesson: string }; Returns: { member_id: string; available_credits: number }[] }
+      subscription_summaries: { Args: { p_ids: string[] }; Returns: { id: string; effective_ends_on: string | null; frozen: boolean }[] }
+      subscription_stats: { Args: Record<PropertyKey, never>; Returns: Json }
+      workspace_section: { Args: { p_module: string; p_section: string; p_page?: number; p_query?: string; p_sort?: string; p_ascending?: boolean; p_filters?: Json; p_selected?: string | null }; Returns: Json }
+
       assign_center_role: {
         Args: { p_center_id: string; p_profile_id: string; p_role: string }
         Returns: undefined

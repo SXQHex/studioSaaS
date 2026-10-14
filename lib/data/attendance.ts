@@ -27,13 +27,20 @@ export async function listAttendance(
   if (lessonId) query = query.eq("lesson_id", lessonId);
 
   const { data, count, error } = await query;
-  return { rows: (data ?? []) as unknown as AttendanceRow[], total: count ?? 0, error: Boolean(error) };
+  return {
+    rows: (data ?? []) as unknown as AttendanceRow[],
+    total: count ?? 0,
+    error: Boolean(error),
+  };
 }
 
 export async function attendanceStats(supabase: ServerSupabase) {
   const [all, attended] = await Promise.all([
     supabase.from("attendance").select("id", { count: "exact", head: true }),
-    supabase.from("attendance").select("id", { count: "exact", head: true }).eq("attended", true),
+    supabase
+      .from("attendance")
+      .select("id", { count: "exact", head: true })
+      .eq("attended", true),
   ]);
   const total = all.count ?? 0;
   const present = attended.count ?? 0;
@@ -41,8 +48,14 @@ export async function attendanceStats(supabase: ServerSupabase) {
 }
 
 /** Members who already have an attendance row for the lesson (they cannot be added twice). */
-export async function recordedMemberIds(supabase: ServerSupabase, lessonId: string) {
+export async function recordedMemberIds(
+  supabase: ServerSupabase,
+  lessonId: string,
+) {
   if (!lessonId) return [] as string[];
-  const { data } = await supabase.from("attendance").select("member_id").eq("lesson_id", lessonId);
+  const { data } = await supabase
+    .from("attendance")
+    .select("member_id")
+    .eq("lesson_id", lessonId);
   return (data ?? []).map((row) => row.member_id);
 }

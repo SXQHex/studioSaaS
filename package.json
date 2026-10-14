@@ -12,7 +12,8 @@
     "lint": "biome lint . --max-diagnostics=100",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "format:check": "biome format app components lib tests scripts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12",

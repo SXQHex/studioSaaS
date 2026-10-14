@@ -10,8 +10,12 @@ describe("database business-rule contract", () => {
   });
 
   it("does not consume group lesson credits for cancelled or postponed sessions", () => {
-    expect(sql).toContain("if v_lesson.status in ('cancelled', 'postponed') then");
-    expect(sql).toContain("and l.status not in ('cancelled'::public.lesson_status, 'postponed'::public.lesson_status)");
+    expect(sql).toContain(
+      "if v_lesson.status in ('cancelled', 'postponed') then",
+    );
+    expect(sql).toContain(
+      "and l.status not in ('cancelled'::public.lesson_status, 'postponed'::public.lesson_status)",
+    );
   });
 
   it("enforces cross-center integrity with composite foreign keys", () => {
@@ -30,7 +34,9 @@ describe("database business-rule contract", () => {
   it("bounds credit balances and keeps the credit ledger append-only for clients", () => {
     expect(sql).toContain("credits_remaining <= credits_purchased");
     expect(sql).toContain("credit_transactions_admin_insert_center");
-    expect(sql).toContain("revoke all privileges on public.notifications from anon, authenticated");
+    expect(sql).toContain(
+      "revoke all privileges on public.notifications from anon, authenticated",
+    );
   });
 
   it("prevents overlapping confirmed room and instructor bookings", () => {

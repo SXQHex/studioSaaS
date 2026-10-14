@@ -1,9 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateStudioViews } from "./revalidate";
 import { requireRole } from "@/lib/supabase/access";
 import { creditAdjustmentSchema } from "@/lib/validation/schemas";
-import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "./result";
+import {
+  type ActionResult,
+  dbErrorMessage,
+  fail,
+  ok,
+  parseInput,
+} from "./result";
 
 /**
  * Appends a manual adjustment to the credit ledger. The balance itself is updated by the
@@ -17,15 +23,22 @@ export async function adjustCredits(input: unknown): Promise<ActionResult> {
 
   const { data: subscription, error: readError } = await supabase
     .from("subscriptions")
-    .select("id, member_id, center_id, status, credits_remaining, credits_purchased")
+    .select(
+      "id, member_id, center_id, status, credits_remaining, credits_purchased",
+    )
     .eq("id", data.subscription_id)
     .maybeSingle();
   if (readError || !subscription) return fail("Abonelik bulunamadı.");
-  if (subscription.status !== "active") return fail("Yalnızca aktif abonelikler için kredi düzeltmesi yapılabilir.");
+  if (subscription.status !== "active")
+    return fail(
+      "Yalnızca aktif abonelikler için kredi düzeltmesi yapılabilir.",
+    );
 
   const nextBalance = subscription.credits_remaining + data.amount;
   if (nextBalance < 0 || nextBalance > subscription.credits_purchased) {
-    return fail("Bu değişiklik kredi bakiyesini 0 ile satın alınan kredi sayısı aralığının dışına çıkarıyor.");
+    return fail(
+      "Bu değişiklik kredi bakiyesini 0 ile satın alınan kredi sayısı aralığının dışına çıkarıyor.",
+    );
   }
 
   const { error } = await supabase.from("credit_transactions").insert({
@@ -37,9 +50,15 @@ export async function adjustCredits(input: unknown): Promise<ActionResult> {
     note: data.note,
     created_by: userId,
   });
-  if (error) return fail(dbErrorMessage(error, "Kredi düzeltmesi yapılamadı. Bakiye ve yetkiyi kontrol edin."));
-
-  revalidatePath("/dashboard/credits");
-  revalidatePath("/dashboard/subscriptions");
-  return ok("Kredi düzeltmesi kaydedildi. Bakiye veritabanı tetikleyicisiyle güncellendi.");
+  if (error)
+    return fail(
+      dbErrorMessage(
+        error,
+        "Kredi düzeltmesi yapılamadı. Bakiye ve yetkiyi kontrol edin.",
+      ),
+    );
+  revalidateStudioViews();
+  return ok(
+    "Kredi düzeltmesi kaydedildi. Bakiye veritabanı tetikleyicisiyle güncellendi.",
+  );
 }

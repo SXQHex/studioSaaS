@@ -4,26 +4,47 @@ import { revalidatePath } from "next/cache";
 import { createClient as createIsolatedSupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireRole } from "@/lib/supabase/access";
-import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "@/lib/actions/result";
+import {
+  type ActionResult,
+  dbErrorMessage,
+  fail,
+  ok,
+  parseInput,
+} from "@/lib/actions/result";
 
 const editProfileSchema = z.object({
-  full_name: z.string().trim().min(2, "Adınız en az iki karakter olmalı.")
+  full_name: z
+    .string()
+    .trim()
+    .min(2, "Adınız en az iki karakter olmalı.")
     .max(160, "Adınız en fazla 160 karakter olabilir."),
 });
 
-const passwordSchema = z.object({
-  current_password: z.string().min(1, "Mevcut şifrenizi girin."),
-  new_password: z.string().min(8, "Yeni şifre en az sekiz karakter olmalı.")
-    .max(128, "Şifre çok uzun."),
-  confirm_password: z.string(),
-}).superRefine((value, ctx) => {
-  if (value.new_password === value.current_password) {
-    ctx.addIssue({ code: "custom", path: ["new_password"], message: "Yeni şifre mevcut şifreden farklı olmalı." });
-  }
-  if (value.new_password !== value.confirm_password) {
-    ctx.addIssue({ code: "custom", path: ["confirm_password"], message: "Yeni şifreler eşleşmiyor." });
-  }
-});
+const passwordSchema = z
+  .object({
+    current_password: z.string().min(1, "Mevcut şifrenizi girin."),
+    new_password: z
+      .string()
+      .min(8, "Yeni şifre en az sekiz karakter olmalı.")
+      .max(128, "Şifre çok uzun."),
+    confirm_password: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.new_password === value.current_password) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["new_password"],
+        message: "Yeni şifre mevcut şifreden farklı olmalı.",
+      });
+    }
+    if (value.new_password !== value.confirm_password) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirm_password"],
+        message: "Yeni şifreler eşleşmiyor.",
+      });
+    }
+  });
 
 /** Self-service profile edits cannot change profile role or scoped assignments. */
 export async function updateMyProfile(input: unknown): Promise<ActionResult> {
@@ -31,7 +52,8 @@ export async function updateMyProfile(input: unknown): Promise<ActionResult> {
   const parsed = parseInput(editProfileSchema, input);
   if (parsed.failure) return parsed.failure;
 
-  const { data, error } = await supabase.from("profiles")
+  const { data, error } = await supabase
+    .from("profiles")
     .update({ full_name: parsed.data.full_name })
     .eq("id", userId)
     .select("id")
@@ -61,17 +83,29 @@ export async function changeMyPassword(input: unknown): Promise<ActionResult> {
   if (!url || !key) return fail("Kimlik doğrulama yapılandırması eksik.");
 
   const verificationClient = createIsolatedSupabaseClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
   });
-  const { data: verified, error: verifyError } = await verificationClient.auth.signInWithPassword({
-    email,
-    password: parsed.data.current_password,
-  });
+  const { data: verified, error: verifyError } =
+    await verificationClient.auth.signInWithPassword({
+      email,
+      password: parsed.data.current_password,
+    });
   if (verifyError || verified.user?.id !== userId) {
     return fail("Mevcut şifre doğrulanamadı.");
   }
 
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.new_password });
-  if (error) return fail("Şifre değiştirilemedi. Gerekirse şifre sıfırlama bağlantısını kullanın.");
-  return ok("Şifreniz güncellendi. Yeni şifrenizle tekrar giriş yapabilirsiniz.");
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.new_password,
+  });
+  if (error)
+    return fail(
+      "Şifre değiştirilemedi. Gerekirse şifre sıfırlama bağlantısını kullanın.",
+    );
+  return ok(
+    "Şifreniz güncellendi. Yeni şifrenizle tekrar giriş yapabilirsiniz.",
+  );
 }

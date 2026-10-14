@@ -7,10 +7,16 @@ export async function GET(request: NextRequest) {
   const type = params.get("type");
   const code = params.get("code");
   const recovery = type === "recovery";
-  const destination = new URL(recovery ? "/reset-password" : "/login", request.nextUrl.origin);
+  const destination = new URL(
+    recovery ? "/reset-password" : "/login",
+    request.nextUrl.origin,
+  );
   const supabase = await createClient();
 
-  if (tokenHash && (type === "recovery" || type === "email" || type === "signup")) {
+  if (
+    tokenHash &&
+    (type === "recovery" || type === "email" || type === "signup")
+  ) {
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type,

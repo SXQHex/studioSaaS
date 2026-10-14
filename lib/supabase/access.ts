@@ -17,9 +17,11 @@ export async function requireRole(allowedRoles: AppRole[]) {
   if (session.status === "no-profile") {
     redirect("/login?error=profile");
   }
-  const permitted = allowedRoles.some((role) =>
-    session.profile.roles.includes(role) ||
-    (role === "admin" && session.profile.roles.some((r) => r === "owner" || r === "appowner"))
+  const permitted = allowedRoles.some(
+    (role) =>
+      session.profile.roles.includes(role) ||
+      (role === "admin" &&
+        session.profile.roles.some((r) => r === "owner" || r === "appowner")),
   );
   if (!permitted) {
     redirect("/dashboard");

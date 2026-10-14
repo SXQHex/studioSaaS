@@ -2,19 +2,33 @@ import type { ServerSupabase } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/database.types";
 import { pageRange } from "./pagination";
 
-export const CREDIT_REASONS = ["purchase", "lesson_use", "admin_adjustment", "refund"] as const;
+export const CREDIT_REASONS = [
+  "purchase",
+  "lesson_use",
+  "admin_adjustment",
+  "refund",
+] as const;
 export type CreditReason = (typeof CREDIT_REASONS)[number];
 
 export type TransactionRow = Pick<
   Tables<"credit_transactions">,
-  "id" | "subscription_id" | "member_id" | "lesson_id" | "amount" | "note" | "created_at"
+  | "id"
+  | "subscription_id"
+  | "member_id"
+  | "lesson_id"
+  | "amount"
+  | "note"
+  | "created_at"
 > & {
   reason: CreditReason;
   members: { full_name: string };
   subscriptions: { type: Tables<"subscriptions">["type"] } | null;
 };
 
-export async function listTransactions(supabase: ServerSupabase, { q, page }: { q: string; page: number }) {
+export async function listTransactions(
+  supabase: ServerSupabase,
+  { q, page }: { q: string; page: number },
+) {
   const [from, to] = pageRange(page);
   let query = supabase
     .from("credit_transactions")
@@ -28,13 +42,23 @@ export async function listTransactions(supabase: ServerSupabase, { q, page }: { 
   if (q) {
     // Match the member name or the note. PostgREST cannot OR across an embedded resource,
     // so resolve matching member ids first (UUIDs are safe to interpolate).
-    const { data: matches } = await supabase.from("members").select("id").ilike("full_name", `%${q}%`).limit(200);
+    const { data: matches } = await supabase
+      .from("members")
+      .select("id")
+      .ilike("full_name", `%${q}%`)
+      .limit(200);
     const ids = (matches ?? []).map((member) => member.id);
     query = query.or(
-      ids.length > 0 ? `member_id.in.(${ids.join(",")}),note.ilike.%${q}%` : `note.ilike.%${q}%`,
+      ids.length > 0
+        ? `member_id.in.(${ids.join(",")}),note.ilike.%${q}%`
+        : `note.ilike.%${q}%`,
     );
   }
 
   const { data, count, error } = await query;
-  return { rows: (data ?? []) as unknown as TransactionRow[], total: count ?? 0, error: Boolean(error) };
+  return {
+    rows: (data ?? []) as unknown as TransactionRow[],
+    total: count ?? 0,
+    error: Boolean(error),
+  };
 }

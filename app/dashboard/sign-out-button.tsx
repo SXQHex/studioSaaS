@@ -28,11 +28,20 @@ export function SignOutButton() {
 
   return (
     <div className="signout-wrap">
-      <button className="signout-button" type="button" onClick={signOut} disabled={busy}>
+      <button
+        className="signout-button"
+        type="button"
+        onClick={signOut}
+        disabled={busy}
+      >
         <LogOut size={17} aria-hidden="true" />
         {busy ? "Çıkış yapılıyor…" : "Çıkış yap"}
       </button>
-      {error && <p className="inline-error" role="alert">{error}</p>}
+      {error && (
+        <p className="inline-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,12 +1,22 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateStudioViews } from "./revalidate";
 import { requireRole } from "@/lib/supabase/access";
 import { attendanceSchema } from "@/lib/validation/schemas";
-import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "./result";
+import {
+  type ActionResult,
+  dbErrorMessage,
+  fail,
+  ok,
+  parseInput,
+} from "./result";
 
 export async function recordAttendance(input: unknown): Promise<ActionResult> {
-  const { supabase, userId } = await requireRole(["admin", "instructor", "ainstructor"]);
+  const { supabase, userId } = await requireRole([
+    "admin",
+    "instructor",
+    "ainstructor",
+  ]);
   const { data, failure } = parseInput(attendanceSchema, input);
   if (failure) return failure;
 
@@ -26,14 +36,19 @@ export async function recordAttendance(input: unknown): Promise<ActionResult> {
     .eq("id", data.member_id)
     .maybeSingle();
   if (memberError || !member) return fail("Üye bulunamadı.");
-  if (member.center_id !== lesson.center_id) return fail("Yoklama için ders ve üye aynı merkeze ait olmalıdır.");
+  if (member.center_id !== lesson.center_id)
+    return fail("Yoklama için ders ve üye aynı merkeze ait olmalıdır.");
 
   if (lesson.type === "private") {
     if (!lesson.private_member_id) {
-      return fail("Özel derse henüz üye atanmamış. Önce ders kaydını düzenleyin.");
+      return fail(
+        "Özel derse henüz üye atanmamış. Önce ders kaydını düzenleyin.",
+      );
     }
     if (lesson.private_member_id !== data.member_id) {
-      return fail("Özel ders yoklaması yalnızca derse atanan üye için kaydedilebilir.");
+      return fail(
+        "Özel ders yoklaması yalnızca derse atanan üye için kaydedilebilir.",
+      );
     }
   }
 
@@ -48,10 +63,8 @@ export async function recordAttendance(input: unknown): Promise<ActionResult> {
   if (error) {
     return fail(dbErrorMessage(error, "Yoklama kaydedilemedi."));
   }
-
-  revalidatePath("/dashboard/attendance");
-  revalidatePath("/dashboard/lessons");
-  revalidatePath("/dashboard/subscriptions");
-  revalidatePath("/dashboard/credits");
-  return ok("Yoklama kaydedildi. Grup dersinde kredi tüketimini veritabanı kuralları yönetir.");
+  revalidateStudioViews();
+  return ok(
+    "Yoklama kaydedildi. Grup dersinde kredi tüketimini veritabanı kuralları yönetir.",
+  );
 }

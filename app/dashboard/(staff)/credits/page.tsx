@@ -1,12 +1,20 @@
 import { listTransactions } from "@/lib/data/credits";
-import { parsePage, sanitizeSearchTerm, type SearchParams } from "@/lib/data/pagination";
+import {
+  parsePage,
+  sanitizeSearchTerm,
+  type SearchParams,
+} from "@/lib/data/pagination";
 import { listActiveSubscriptions } from "@/lib/data/subscriptions";
 import { requireRole } from "@/lib/supabase/access";
 import { CreditsManager } from "./credits-manager";
 
 export const metadata = { title: "Kredi Hareketleri | FTK Studio" };
 
-export default async function CreditsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function CreditsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const { supabase } = await requireRole(["admin"]);
   const params = await searchParams;
   const q = sanitizeSearchTerm(params.q);

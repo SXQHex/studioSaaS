@@ -1,73 +1,39 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateStudioViews } from "./revalidate";
 import { requireRole } from "@/lib/supabase/access";
-import { subscriptionSchema, subscriptionUpdateSchema } from "@/lib/validation/schemas";
-import { type ActionResult, dbErrorMessage, fail, ok, parseInput } from "./result";
+import { subscriptionUpdateSchema } from "@/lib/validation/schemas";
+import {
+  type ActionResult,
+  dbErrorMessage,
+  fail,
+  ok,
+  parseInput,
+} from "./result";
 
-const statusLabels = { active: "Aktif", expired: "Süresi doldu", cancelled: "İptal" } as const;
-const paymentLabels = { pending: "Bekliyor", paid: "Ödendi" } as const;
+const statusLabels = {
+  active: "Aktif",
+  expired: "Süresi doldu",
+  cancelled: "İptal",
+} as const;
 
-function revalidateSubscriptionViews() {
-  revalidatePath("/dashboard/subscriptions");
-  revalidatePath("/dashboard/credits");
-  revalidatePath("/dashboard/attendance");
-}
-
-export async function createSubscription(input: unknown): Promise<ActionResult> {
-  const { supabase, userId } = await requireRole(["admin"]);
-  const { data, failure } = parseInput(subscriptionSchema, input);
-  if (failure) return failure;
-
-  const { data: member, error: memberError } = await supabase
-    .from("members")
-    .select("id, center_id, is_active")
-    .eq("id", data.member_id)
-    .maybeSingle();
-  if (memberError || !member) return fail("Üye bulunamadı.");
-  if (!member.is_active) return fail("Pasif üyeye yeni abonelik açılamaz.");
-
-  const { error } = await supabase.from("subscriptions").insert({
-    center_id: member.center_id,
-    member_id: data.member_id,
-    type: data.type,
-    starts_on: data.starts_on,
-    ends_on: data.ends_on,
-    credits_purchased: data.credits_purchased,
-    credits_remaining: data.credits_purchased,
-    amount: data.amount,
-    payment_status: data.payment_status,
-    paid_at: data.payment_status === "paid" ? new Date().toISOString() : null,
-    notes: data.notes,
-    created_by: userId,
-  });
-  if (error) return fail(dbErrorMessage(error, "Abonelik oluşturulamadı."));
-
-  revalidateSubscriptionViews();
-  return ok("Abonelik oluşturuldu. İlk kredi hareketi veritabanı tetikleyicisiyle kaydedildi.");
-}
-
-export async function updateSubscription(input: unknown): Promise<ActionResult> {
+export async function updateSubscription(
+  input: unknown,
+): Promise<ActionResult> {
   const { supabase } = await requireRole(["admin"]);
   const { data, failure } = parseInput(subscriptionUpdateSchema, input);
   if (failure) return failure;
 
-  if (data.payment_status) return fail("Ödeme değişikliklerini tahsilat defterinden yapın.");
-  const changes: {
-    status?: "active" | "expired" | "cancelled";
-    payment_status?: "pending" | "paid";
-    paid_at?: string | null;
-  } = {};
-  if (data.status) changes.status = data.status;
-  if (data.payment_status) {
-    changes.payment_status = data.payment_status;
-    changes.paid_at = data.payment_status === "paid" ? new Date().toISOString() : null;
-  }
-
-  const { error } = await supabase.from("subscriptions").update(changes).eq("id", data.id);
+  const { data: updated, error } = await supabase
+    .from("subscriptions")
+    .update({ status: data.status })
+    .eq("id", data.id)
+    .select("id")
+    .maybeSingle();
   if (error) return fail(dbErrorMessage(error, "Abonelik güncellenemedi."));
 
-  revalidateSubscriptionViews();
-  const label = data.status ? statusLabels[data.status] : data.payment_status ? paymentLabels[data.payment_status] : "Güncelle";
+  if (!updated) return fail("Abonelik bulunamadı veya yetkiniz yok.");
+  revalidateStudioViews();
+  const label = statusLabels[data.status];
   return ok(`Abonelik güncellendi: ${label}.`);
 }

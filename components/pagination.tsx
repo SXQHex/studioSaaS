@@ -38,7 +38,11 @@ export function Pagination({
       </p>
       <div className="row-actions">
         {page > 1 ? (
-          <Link className="secondary-action" href={href(basePath, params, page - 1)} rel="prev">
+          <Link
+            className="secondary-action"
+            href={href(basePath, params, page - 1)}
+            rel="prev"
+          >
             Önceki
           </Link>
         ) : (
@@ -47,7 +51,11 @@ export function Pagination({
           </span>
         )}
         {page < pages ? (
-          <Link className="secondary-action" href={href(basePath, params, page + 1)} rel="next">
+          <Link
+            className="secondary-action"
+            href={href(basePath, params, page + 1)}
+            rel="next"
+          >
             Sonraki
           </Link>
         ) : (
